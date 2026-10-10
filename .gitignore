@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.so
+*.c
+build/
+*.db
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
