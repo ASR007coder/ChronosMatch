@@ -108,11 +108,6 @@ class SimulatorConfig:
 
 class MarketSimulator:
     def __init__(self, config: SimulatorConfig, sink: OrderSink) -> None:
-        if config.target_rate_per_sec <= 0:
-            raise ValueError("target_rate_per_sec must be positive")
-        if config.max_retries_per_order < 0:
-            raise ValueError("max_retries_per_order must be >= 0")
-
         self.config = config
         self.sink = sink
         self.stats = SimulatorStats()
@@ -120,16 +115,23 @@ class MarketSimulator:
 
     async def run(self) -> SimulatorStats:
         start = time.perf_counter()
-        interval = 1.0 / self.config.target_rate_per_sec
+        rate = self.config.target_rate_per_sec
+        interval = 1.0 / rate if rate > 0 else 0.0
 
         try:
-            for order in self._orders:
+            for i, order in enumerate(self._orders):
                 self.stats.generated += 1
                 await self._submit_with_retries(order)
                 if interval > 0:
-                    await asyncio.sleep(interval)
-        finally:
+                    scheduled = start + (i + 1) * interval
+                    now = time.perf_counter()
+                    wait = scheduled - now
+                    if wait > 0:
+                        await asyncio.sleep(wait)
             self.stats.elapsed_seconds = time.perf_counter() - start
+        finally:
+            if self.stats.elapsed_seconds <= 0:
+                self.stats.elapsed_seconds = time.perf_counter() - start
 
         return self.stats
 
