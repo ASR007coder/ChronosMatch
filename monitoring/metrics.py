@@ -1,4 +1,21 @@
 
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class LatencyRecord:
+    order_id: int
+    start_ns: int
+    end_ns: int
+
+    @property
+    def latency_ns(self) -> int:
+        if self.end_ns < self.start_ns:
+            raise ValueError("end_ns cannot be earlier than start_ns")
+
+        return self.end_ns - self.start_ns
+
 class Metrics:
     def __init__(self):
         self.orders_generated = 0

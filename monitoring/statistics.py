@@ -29,7 +29,7 @@ def percentile(values, percent):
         raise ValueError("Values cannot be negative")
 
     sorted_values = sorted(values)
-    rank = max(1, int((percent / 100) * len(sorted_values) + 0.999999))
+    rank = max(1, int((percent / 100) * len(sorted_values) + 0.999999999))
 
     return sorted_values[rank - 1]
 
@@ -44,12 +44,17 @@ def calculate_latency_summary(latencies):
             "max": 0,
         }
 
-    values = [item.latency_ns if isinstance(item, LatencyRecord) else item
-              for item in latencies]
+    values = [
+        item.latency_ns if isinstance(item, LatencyRecord) else item
+        for item in latencies
+    ]
 
     return {
         "count": len(values),
-        "median": median(values),
+
+        # Week 1 guide: use nearest-rank p50 instead of the statistical median.
+        "median": percentile(values, 50),
+
         "p95": percentile(values, 95),
         "p99": percentile(values, 99),
         "max": max(values),

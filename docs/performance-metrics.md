@@ -34,10 +34,12 @@ Latency measures the time taken for an operation. The statistics module accepts 
 The latency summary reports:
 
 - **Count:** Number of latency samples.
-- **Median:** Middle latency value.
+- **Median (p50):** The 50th-percentile latency.
 - **p95:** 95th-percentile latency.
 - **p99:** 99th-percentile latency.
 - **Maximum:** Largest recorded latency.
+
+Percentile values, including p50, are calculated using the nearest-rank method described in Section 5. For 100 sorted latency samples from 1 to 100, p50 = 50, p95 = 95, and p99 = 99.
 
 Lower latency generally indicates faster processing.
 
@@ -47,10 +49,11 @@ The `percentile()` function sorts the input values and uses the nearest-rank met
 
 For 100 sorted values from 1 to 100:
 
+- p50 = 50
 - p95 = 95
 - p99 = 99
 
-The function rejects empty input and percentile values outside the range 0–100.
+The function rejects empty input, negative values, and percentile values outside the range 0–100.
 
 ## 6. Testing
 
