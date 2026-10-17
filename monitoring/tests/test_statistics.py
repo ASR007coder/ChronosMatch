@@ -21,6 +21,7 @@ def test_throughput_rejects_zero_elapsed_time():
 def test_percentile_with_100_values():
     values = list(range(1, 101))
 
+    assert percentile(values, 50) == 50
     assert percentile(values, 95) == 95
     assert percentile(values, 99) == 99
 
