@@ -1,3 +1,5 @@
+# backend/engine/matching_engine.py
+
 """Pure-Python matching engine: the correctness baseline for the Cython port.
 
 Two entry points with identical behaviour:
@@ -5,8 +7,8 @@ Two entry points with identical behaviour:
   submit_order(order) -> list of Trade, for convenience/tests
 See docs/engine-interface.md for the full contract.
 """
-from engine.models import BUY, Trade, validate_order
-from engine.order_book import OrderBook
+from backend.engine.models import BUY, Trade, validate_order
+from backend.engine.order_book import OrderBook
 
 
 class MatchingEngine:

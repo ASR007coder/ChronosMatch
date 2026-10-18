@@ -1,8 +1,8 @@
 #  ipc/producer.py
 
 
-from ipc.protocol import encode
-from ipc.ring_buffer import RingBuffer
+from backend.ipc.protocol import encode
+from backend.ipc.ring_buffer import RingBuffer
 
 
 class Producer:

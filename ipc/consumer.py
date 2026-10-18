@@ -1,8 +1,8 @@
 # ipc/consumer.py
 
 
-from ipc.protocol import decode
-from ipc.ring_buffer import RingBuffer
+from backend.ipc.protocol import decode
+from backend.ipc.ring_buffer import RingBuffer
 
 
 class Consumer:

@@ -6,7 +6,7 @@ import struct
 import uuid
 from multiprocessing import Lock, Semaphore
 
-from ipc.protocol import ORDER_RECORD_SIZE, validate_record
+from backend.ipc.protocol import ORDER_RECORD_SIZE, validate_record
 
 
 CAPACITY = 4
