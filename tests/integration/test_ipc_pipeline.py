@@ -102,11 +102,14 @@ async def test_end_to_end_no_silent_loss_with_rejections():
             self.received = []
             self._attempt = 0
 
-        async def submit(self, *args, **kwargs):
+        async def submit(self, order_id, sequence, price,
+                         timestamp_ns, quantity, side):
             self._attempt += 1
             if self._attempt % 5 == 0:
                 return False
-            self.received.append(args)
+            self.received.append(
+                (order_id, sequence, price, timestamp_ns, quantity, side)
+            )
             return True
 
     ipc = FlakyIPC()
