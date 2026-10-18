@@ -1,5 +1,8 @@
 
 from monitoring.mock_events import sample_snapshots
+from engine.matching_engine import MatchingEngine
+from engine.models import BUY, SELL, Order
+from monitoring.metrics import Metrics
 
 
 def format_snapshot(snapshot):
@@ -33,7 +36,39 @@ def format_snapshot(snapshot):
     )
 
 
+def run_demo():
+    """Run a small simulation using the real matching engine."""
+    engine = MatchingEngine()
+    metrics = Metrics()
+
+    orders = [
+        Order(1, 1, SELL, 50000, 2),
+        Order(2, 2, BUY, 50000, 1),
+        Order(3, 3, BUY, 49000, 3),
+    ]
+
+    for order in orders:
+        metrics.record_generated()
+        try:
+            trades = engine.submit_order(order)
+        except ValueError:
+            metrics.record_error()
+            continue
+
+        metrics.record_processed()
+        metrics.record_trades(len(trades))
+
+    best_bid = engine.best_bid()
+    best_ask = engine.best_ask()
+
+    print("=== CHRONOSMATCH - REAL ENGINE DEMO ===")
+    print("Best bid:", best_bid)
+    print("Best ask:", best_ask)
+    print("Orders generated:", metrics.orders_generated)
+    print("Orders processed:", engine.orders_processed)
+    print("Trades executed:", engine.trades_executed)
+    print("Monitoring errors:", metrics.errors)
+
+
 if __name__ == "__main__":
-    for snapshot in sample_snapshots():
-        print(format_snapshot(snapshot))
-        print("-" * 30)
+    run_demo()
