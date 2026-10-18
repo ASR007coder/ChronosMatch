@@ -18,12 +18,30 @@ def test_throughput_rejects_zero_elapsed_time():
         calculate_throughput(100, 0)
 
 
+def test_throughput_rejects_negative_orders():
+    with pytest.raises(ValueError):
+        calculate_throughput(-1, 2)
+
+
+def test_throughput_rejects_negative_elapsed_time():
+    with pytest.raises(ValueError):
+        calculate_throughput(100, -1)
+
+
 def test_percentile_with_100_values():
     values = list(range(1, 101))
 
     assert percentile(values, 50) == 50
     assert percentile(values, 95) == 95
     assert percentile(values, 99) == 99
+
+
+def test_percentile_zero_returns_smallest_value():
+    assert percentile([30, 10, 20], 0) == 10
+
+
+def test_percentile_100_returns_largest_value():
+    assert percentile([30, 10, 20], 100) == 30
 
 
 def test_percentile_rejects_empty_values():
@@ -36,6 +54,11 @@ def test_percentile_rejects_invalid_percent():
         percentile([10, 20, 30], 101)
 
 
+def test_percentile_rejects_negative_values():
+    with pytest.raises(ValueError):
+        percentile([10, -5, 20], 95)
+
+
 def test_latency_summary():
     latencies = [
         LatencyRecord(100),
@@ -44,6 +67,16 @@ def test_latency_summary():
     ]
 
     result = calculate_latency_summary(latencies)
+
+    assert result["count"] == 3
+    assert result["median"] == 200
+    assert result["p95"] == 300
+    assert result["p99"] == 300
+    assert result["max"] == 300
+
+
+def test_latency_summary_accepts_integer_values():
+    result = calculate_latency_summary([100, 200, 300])
 
     assert result["count"] == 3
     assert result["median"] == 200
