@@ -257,3 +257,45 @@ The matching-engine contract is ready for implementation when:
 - The Python and Cython implementations are expected to produce equivalent results.
 
 This document defines the intended behavior. Completion must be verified through tests before the engine is considered fully compliant.
+## Order Book Data-Structure Design and Invariants
+
+### 1. Data Structures
+
+The order book uses the following structures:
+
+- **Dictionary (`levels`):** Maps each price to a FIFO queue of resting orders and their remaining quantities.
+- **Heap (`_heap`):** Maintains price-level priority and provides access to the best price.
+- **Deque (`deque`):** Preserves FIFO order among orders at the same price.
+- **OrderBook:** Maintains separate bid and ask books.
+
+### 2. Bid and Ask Priority
+
+- Bids prioritize the highest price.
+- Asks prioritize the lowest price.
+- Bid prices are negated in the min-heap so the highest actual bid appears first.
+- Ask prices are stored normally in the min-heap so the lowest ask appears first.
+
+### 3. Remaining Quantity and Removal
+
+Each resting order stores its order ID and remaining quantity.
+
+- A partial fill reduces the remaining quantity.
+- A fully filled order is removed from its FIFO queue.
+- When a price-level queue becomes empty, its price level is removed from both the heap and dictionary.
+
+### 4. Order Book Invariants
+
+1. The best bid is the highest available bid price.
+2. The best ask is the lowest available ask price.
+3. Every active price level has a corresponding dictionary entry and heap entry.
+4. Orders at the same price are processed in FIFO order.
+5. Every resting order has positive remaining quantity.
+6. Fully filled orders are removed.
+7. Empty price levels are removed from the heap and dictionary.
+8. Every trade satisfies the matching condition.
+9. Original quantity equals total filled quantity plus remaining quantity.
+10. Invalid orders do not modify the order book.
+
+### 5. Limitations
+
+Order cancellation and modification are not supported in the current design. The heap cleanup approach assumes that price levels become empty only when they reach the best-price position and are removed by the matching process.
