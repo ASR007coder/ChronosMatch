@@ -1,4 +1,3 @@
-
 import pytest
 import sqlite3
 from pathlib import Path
@@ -131,3 +130,33 @@ def test_trade_store_rejects_invalid_recent_trade_limit():
     with TradeStore() as store:
         with pytest.raises(ValueError):
             store.get_recent_trades(limit=0)
+
+
+def test_trade_store_returns_empty_list_when_no_trades_exist():
+    with TradeStore() as store:
+        recent = store.get_recent_trades(limit=10)
+
+        assert recent == []
+
+
+def test_trade_store_returns_all_trades_when_limit_is_larger():
+    with TradeStore() as store:
+        store.save_trade(1, 101, 201, 10000, 5, 1)
+        store.save_trade(2, 102, 202, 11000, 3, 2)
+
+        recent = store.get_recent_trades(limit=10)
+
+        assert len(recent) == 2
+        assert [trade["trade_id"] for trade in recent] == [2, 1]
+
+
+def test_trade_store_rejects_negative_price():
+    with TradeStore() as store:
+        with pytest.raises(ValueError):
+            store.save_trade(1, 101, 201, -100, 5, 1)
+
+
+def test_trade_store_rejects_negative_quantity():
+    with TradeStore() as store:
+        with pytest.raises(ValueError):
+            store.save_trade(1, 101, 201, 10000, -5, 1)
