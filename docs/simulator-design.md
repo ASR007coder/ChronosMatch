@@ -192,3 +192,18 @@ Total: 48 tests passing.
 - **Mahesh (engine):** owns `engine.models`. Simulator imports
   BUY/SELL from there.
 - **Vijay (metrics):** consumes simulator stats.
+
+
+
+
+## 17. Week 3: Simulator Deep Improvement (Audit & Stabilize)
+
+As per the Week 3 roadmap, we are beginning the deep improvement phase.
+
+### Day 1 Audit Findings:
+- [x] Verified order_format.py strictly follows the 64-byte binary protocol.
+- [x] Verified order_generator.py produces deterministic output with the same seed.
+- [ ] TODO: Enhance workload validation bounds (Day 2).
+- [ ] TODO: Verify IPC retry logic does not cause duplicate orders (Day 3).
+
+Status: **Audit Complete**.
