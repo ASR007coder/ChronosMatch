@@ -1,5 +1,7 @@
+# backend/app/main.py
+
 from fastapi import FastAPI
-from backend.app.routers import health, simulator
+from backend.app.routers import health, simulator, dashboard
 
 app = FastAPI(
     title="ChronosMatch API",
@@ -17,6 +19,12 @@ app.include_router(
     simulator.router,
     prefix="/api/v1/simulator",
     tags=["Simulator"],
+)
+
+app.include_router(
+    dashboard.router,
+    prefix="/api/v1/dashboard",
+    tags=["Dashboard"],
 )
 
 
