@@ -101,3 +101,25 @@ def test_negative_count_rejected():
 def test_invalid_reference_price_rejected():
     with pytest.raises(ValueError):
         WorkloadConfig(kind=MIXED, count=10, seed=1, reference_price=0)
+
+
+def test_burst_compresses_timestamps():
+    """Verify that the burst workload creates a tighter cluster of timestamps."""
+    cfg = WorkloadConfig(
+        kind=BURST, 
+        count=200, 
+        seed=42, 
+        burst_at=50, 
+        burst_length=50, 
+        burst_multiplier=5
+    )
+    orders = build_workload(cfg)
+    
+    # Get the time gap between orders before the burst
+    gap_before = orders[50].timestamp_ns - orders[49].timestamp_ns
+    
+    # Get the time gap between orders during the burst
+    gap_during = orders[51].timestamp_ns - orders[50].timestamp_ns
+    
+    # The gap during the burst should be much smaller because of the multiplier
+    assert gap_during < gap_before

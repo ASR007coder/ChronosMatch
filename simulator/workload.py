@@ -7,16 +7,13 @@ A workload decides WHAT kind of orders to produce:
   - marketable   : prices that cross a reference price (will trade)
   - non_marketable : prices that do NOT cross (build book depth)
   - burst        : a temporary spike in generation rate
-
-Each workload is deterministic given a seed, so tests and benchmarks
-produce identical order streams.
 """
 
 from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Callable, Iterator
+from typing import Callable
 
 from simulator.order_generator import (
     BUY,
@@ -27,16 +24,7 @@ from simulator.order_generator import (
 )
 
 
-# ============================================================
-# Reference price used to decide "marketable" vs "non-marketable"
-# ============================================================
-
 DEFAULT_REFERENCE_PRICE = 10_000   # integer ticks (paise)
-
-
-# ============================================================
-# Workload kinds
-# ============================================================
 
 MIXED = "mixed"
 MARKETABLE = "marketable"
@@ -44,20 +32,14 @@ NON_MARKETABLE = "non_marketable"
 BURST = "burst"
 
 
-# ============================================================
-# Config extension for workloads
-# ============================================================
-
 @dataclass(slots=True)
 class WorkloadConfig:
     kind: str = MIXED
     count: int = 1_000
     seed: int = 42
 
-    # for marketable / non_marketable
     reference_price: int = DEFAULT_REFERENCE_PRICE
 
-    # for burst
     burst_at: int = 500            # start the burst after this many orders
     burst_length: int = 100        # how many orders the burst lasts
     burst_multiplier: int = 5      # instantaneous rate multiplier
@@ -77,26 +59,13 @@ class WorkloadConfig:
             raise ValueError("burst_multiplier must be >= 1")
 
 
-# ============================================================
-# Core workload builders
-# ============================================================
-
 def mixed_workload(cfg: WorkloadConfig) -> list[Order]:
-    """Random buys and sells across the config's price/quantity band."""
-    sim_cfg = SimulatorConfig(
-        order_count=cfg.count,
-        seed=cfg.seed,
-    )
+    sim_cfg = SimulatorConfig(order_count=cfg.count, seed=cfg.seed)
     gen = OrderGenerator(sim_cfg)
     return gen.generate(cfg.count)
 
 
 def marketable_workload(cfg: WorkloadConfig) -> list[Order]:
-    """
-    Prices that cross the reference price, so the engine will trade.
-    BUY orders priced ABOVE the reference (aggressive buys).
-    SELL orders priced BELOW the reference (aggressive sells).
-    """
     rng = random.Random(cfg.seed)
     sim_cfg = SimulatorConfig(seed=cfg.seed)
     gen = OrderGenerator(sim_cfg)
@@ -105,14 +74,10 @@ def marketable_workload(cfg: WorkloadConfig) -> list[Order]:
     for _ in range(cfg.count):
         side = BUY if rng.random() < 0.5 else SELL
         if side == BUY:
-            price = rng.randint(cfg.reference_price + 1,
-                                cfg.reference_price + 100)
+            price = rng.randint(cfg.reference_price + 1, cfg.reference_price + 100)
         else:
-            price = rng.randint(cfg.reference_price - 100,
-                                cfg.reference_price - 1)
+            price = rng.randint(cfg.reference_price - 100, cfg.reference_price - 1)
 
-        # Base order fields come from the generator's counters,
-        # but we override price + side to make it marketable.
         base = gen.next_order()
         orders.append(Order(
             order_id=base.order_id,
@@ -126,12 +91,6 @@ def marketable_workload(cfg: WorkloadConfig) -> list[Order]:
 
 
 def non_marketable_workload(cfg: WorkloadConfig) -> list[Order]:
-    """
-    Prices that do NOT cross the reference price.
-    BUY orders priced BELOW the reference (passive).
-    SELL orders priced ABOVE the reference (passive).
-    The book builds depth without matching.
-    """
     rng = random.Random(cfg.seed)
     sim_cfg = SimulatorConfig(seed=cfg.seed)
     gen = OrderGenerator(sim_cfg)
@@ -140,11 +99,9 @@ def non_marketable_workload(cfg: WorkloadConfig) -> list[Order]:
     for _ in range(cfg.count):
         side = BUY if rng.random() < 0.5 else SELL
         if side == BUY:
-            price = rng.randint(cfg.reference_price - 100,
-                                cfg.reference_price - 1)
+            price = rng.randint(cfg.reference_price - 100, cfg.reference_price - 1)
         else:
-            price = rng.randint(cfg.reference_price + 1,
-                                cfg.reference_price + 100)
+            price = rng.randint(cfg.reference_price + 1, cfg.reference_price + 100)
 
         base = gen.next_order()
         orders.append(Order(
@@ -162,8 +119,8 @@ def burst_workload(cfg: WorkloadConfig) -> list[Order]:
     """
     Normal stream with a temporary spike in rate.
     We model the rate spike by compressing timestamps during the burst
-    window — the timestamps are closer together, so the effective rate
-    is higher.
+    window — the timestamps are closer together, meaning the effective 
+    submission rate is higher.
     """
     base = mixed_workload(cfg)
     if cfg.burst_length == 0:
@@ -174,14 +131,14 @@ def burst_workload(cfg: WorkloadConfig) -> list[Order]:
     if burst_start >= len(base):
         return base
 
-    # Compress timestamps in [burst_start, burst_end) to simulate
-    # the "higher rate" window.
     scale = 1.0 / cfg.burst_multiplier
     prev_ts = base[burst_start].timestamp_ns
     patched = []
+    
     for i, o in enumerate(base):
         if burst_start <= i < burst_end:
-            prev_ts = prev_ts + int((o.timestamp_ns - prev_ts) * scale) if i > burst_start else prev_ts
+            if i > burst_start:
+                prev_ts = prev_ts + int((o.timestamp_ns - prev_ts) * scale)
             patched.append(Order(
                 order_id=o.order_id,
                 sequence=o.sequence,
@@ -192,12 +149,9 @@ def burst_workload(cfg: WorkloadConfig) -> list[Order]:
             ))
         else:
             patched.append(o)
+            
     return patched
 
-
-# ============================================================
-# Dispatcher
-# ============================================================
 
 _BUILDERS: dict[str, Callable[[WorkloadConfig], list[Order]]] = {
     MIXED: mixed_workload,
@@ -208,24 +162,4 @@ _BUILDERS: dict[str, Callable[[WorkloadConfig], list[Order]]] = {
 
 
 def build_workload(cfg: WorkloadConfig) -> list[Order]:
-    """Dispatch to the right workload builder based on cfg.kind."""
     return _BUILDERS[cfg.kind](cfg)
-
-
-# ============================================================
-# Standalone demo
-# ============================================================
-
-if __name__ == "__main__":
-    for kind in (MIXED, MARKETABLE, NON_MARKETABLE, BURST):
-        cfg = WorkloadConfig(kind=kind, count=5, seed=42)
-        orders = build_workload(cfg)
-        print(f"\n--- {kind} ({len(orders)} orders) ---")
-        for o in orders:
-            print(" ", o)
-
-    # Reproducibility check
-    a = build_workload(WorkloadConfig(kind=MIXED, count=50, seed=42))
-    b = build_workload(WorkloadConfig(kind=MIXED, count=50, seed=42))
-    assert a == b, "same seed must yield same workload"
-    print("\nworkload.py self-test OK")
