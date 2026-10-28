@@ -102,6 +102,10 @@
       margin-top: 28px;
     }
 
+    h4 {
+      margin-top: 22px;
+    }
+
     pre {
       padding: 14px;
       background: #f1f5f9;
@@ -149,13 +153,23 @@
       background: #f8fafc;
     }
 
-    .empty-trades {
+    .empty-message {
       padding: 16px;
       color: #64748b;
       text-align: center;
     }
 
-    @media (max-width: 500px) {
+    .order-book-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .order-book-grid h4 {
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
       body {
         padding: 12px;
       }
@@ -165,7 +179,8 @@
         padding: 18px;
       }
 
-      .metric-grid {
+      .metric-grid,
+      .order-book-grid {
         grid-template-columns: 1fr;
       }
 
@@ -251,6 +266,45 @@
       </div>
     </section>
 
+    <!-- New Order Book section -->
+    <section id="orderBookSection" class="hidden">
+      <h3>Order Book</h3>
+
+      <div class="order-book-grid">
+        <div>
+          <h4>Bids (Buy Orders)</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody id="bids"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h4>Asks (Sell Orders)</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody id="asks"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="responseSection" class="hidden">
       <h3>Full Backend Response</h3>
       <pre id="results"></pre>
@@ -275,7 +329,13 @@
     const tradeSection = document.getElementById("tradeSection");
     const trades = document.getElementById("trades");
 
-    const responseSection = document.getElementById("responseSection");
+    const orderBookSection =
+      document.getElementById("orderBookSection");
+    const bids = document.getElementById("bids");
+    const asks = document.getElementById("asks");
+
+    const responseSection =
+      document.getElementById("responseSection");
     const results = document.getElementById("results");
 
     function addCell(row, value) {
@@ -292,7 +352,7 @@
         const cell = document.createElement("td");
 
         cell.colSpan = 5;
-        cell.className = "empty-trades";
+        cell.className = "empty-message";
         cell.textContent = "No trades were executed.";
 
         row.appendChild(cell);
@@ -311,6 +371,45 @@
 
         trades.appendChild(row);
       });
+    }
+
+    // Display bids and asks from the backend order book.
+    function displayOrderBook(orderBook) {
+      bids.replaceChildren();
+      asks.replaceChildren();
+
+      function displaySide(tableBody, orders, sideName) {
+        if (!Array.isArray(orders) || orders.length === 0) {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+
+          cell.colSpan = 2;
+          cell.className = "empty-message";
+          cell.textContent = `No ${sideName.toLowerCase()} orders.`;
+
+          row.appendChild(cell);
+          tableBody.appendChild(row);
+          return;
+        }
+
+        orders.forEach((order) => {
+          const row = document.createElement("tr");
+
+          // Backend order-book entries are [price, quantity].
+          if (Array.isArray(order)) {
+            addCell(row, order[0]);
+            addCell(row, order[1]);
+          } else {
+            addCell(row, order.price);
+            addCell(row, order.quantity);
+          }
+
+          tableBody.appendChild(row);
+        });
+      }
+
+      displaySide(bids, orderBook?.bids, "Bid");
+      displaySide(asks, orderBook?.asks, "Ask");
     }
 
     form.addEventListener("submit", async (event) => {
@@ -335,6 +434,7 @@
 
       metrics.classList.add("hidden");
       tradeSection.classList.add("hidden");
+      orderBookSection.classList.add("hidden");
       responseSection.classList.add("hidden");
 
       try {
@@ -374,6 +474,9 @@
 
         displayTrades(data.trades);
         tradeSection.classList.remove("hidden");
+
+        displayOrderBook(data.order_book);
+        orderBookSection.classList.remove("hidden");
 
         results.textContent = JSON.stringify(data, null, 2);
         responseSection.classList.remove("hidden");
