@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +16,7 @@
     }
 
     main {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 30px auto;
       padding: 28px;
       background: white;
@@ -110,6 +111,50 @@
       overflow-x: auto;
     }
 
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid #dbe3ee;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .empty-trades {
+      padding: 16px;
+      color: #64748b;
+      text-align: center;
+    }
+
     @media (max-width: 500px) {
       body {
         padding: 12px;
@@ -122,6 +167,10 @@
 
       .metric-grid {
         grid-template-columns: 1fr;
+      }
+
+      th, td {
+        padding: 10px;
       }
     }
   </style>
@@ -157,7 +206,6 @@
       Ready to start.
     </p>
 
-    <!-- Metrics populated from the backend response -->
     <section id="metrics" class="hidden">
       <h3>Simulation Metrics</h3>
 
@@ -186,7 +234,21 @@
 
     <section id="tradeSection" class="hidden">
       <h3>Trade Details</h3>
-      <pre id="trades"></pre>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Trade ID</th>
+              <th>Buy Order ID</th>
+              <th>Sell Order ID</th>
+              <th>Price</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody id="trades"></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="responseSection" class="hidden">
@@ -216,6 +278,41 @@
     const responseSection = document.getElementById("responseSection");
     const results = document.getElementById("results");
 
+    function addCell(row, value) {
+      const cell = document.createElement("td");
+      cell.textContent = value ?? "N/A";
+      row.appendChild(cell);
+    }
+
+    function displayTrades(tradeList) {
+      trades.replaceChildren();
+
+      if (!Array.isArray(tradeList) || tradeList.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 5;
+        cell.className = "empty-trades";
+        cell.textContent = "No trades were executed.";
+
+        row.appendChild(cell);
+        trades.appendChild(row);
+        return;
+      }
+
+      tradeList.forEach((trade) => {
+        const row = document.createElement("tr");
+
+        addCell(row, trade.trade_id);
+        addCell(row, trade.buy_order_id);
+        addCell(row, trade.sell_order_id);
+        addCell(row, trade.price);
+        addCell(row, trade.quantity);
+
+        trades.appendChild(row);
+      });
+    }
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -233,7 +330,8 @@
 
       button.disabled = true;
       button.textContent = "Running...";
-      status.textContent = "Simulation is running. Please wait...";
+      status.textContent =
+        "Simulation is running. Please wait...";
 
       metrics.classList.add("hidden");
       tradeSection.classList.add("hidden");
@@ -260,7 +358,6 @@
           );
         }
 
-        // Populate metric cards with real API response values.
         ordersGenerated.textContent =
           data.orders_generated ?? "N/A";
 
@@ -275,20 +372,14 @@
 
         metrics.classList.remove("hidden");
 
-        // Display trade information returned by the backend.
-        trades.textContent = JSON.stringify(
-          data.trades ?? [],
-          null,
-          2
-        );
-
+        displayTrades(data.trades);
         tradeSection.classList.remove("hidden");
 
-        // Keep the full response available for debugging.
         results.textContent = JSON.stringify(data, null, 2);
         responseSection.classList.remove("hidden");
 
-        status.textContent = "Simulation completed successfully.";
+        status.textContent =
+          "Simulation completed successfully.";
 
       } catch (error) {
         status.textContent =
@@ -302,4 +393,3 @@
   </script>
 </body>
 </html>
-```
