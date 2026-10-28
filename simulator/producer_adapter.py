@@ -1,9 +1,6 @@
 """
 ChronosMatch — Market Simulator
 Producer adapter: connects MarketSimulator to Asif's real IPC producer.
-
-Wired to Asif's Producer.submit() signature:
-    def submit(order_id, sequence, price, timestamp_ns, quantity, side, timeout=None) -> bool
 """
 
 from __future__ import annotations
@@ -11,8 +8,17 @@ from typing import Protocol, Optional
 from simulator.order_generator import Order
 
 
+class ProducerError(Exception):
+    """Base for any producer-level failure."""
+
+class ProducerRejected(ProducerError):
+    """The producer explicitly rejected this order."""
+
+class ProducerFull(ProducerError):
+    """The producer's buffer was full (timeout)."""
+
+
 class IPCProducerLike(Protocol):
-    # Note: Not async, because Asif's code is synchronous
     def submit(self,
                order_id: int,
                sequence: int,
@@ -25,23 +31,22 @@ class IPCProducerLike(Protocol):
 
 
 class IPCProducerAdapter:
-    """
-    Adapts our Order objects to Asif's IPC producer.
-    Implements the async OrderSink interface for our simulator.
-    """
-
     def __init__(self, producer: IPCProducerLike, timeout: float = 1.0) -> None:
         self._producer = producer
         self._timeout = timeout
 
     async def submit(self, order: Order) -> bool:
-        # Call Asif's synchronous function directly
-        return self._producer.submit(
-            order_id=order.order_id,
-            sequence=order.sequence,
-            price=order.price,
-            timestamp_ns=order.timestamp_ns,
-            quantity=order.quantity,
-            side=order.side,
-            timeout=self._timeout,
-        )
+        try:
+            return self._producer.submit(
+                order_id=order.order_id,
+                sequence=order.sequence,
+                price=order.price,
+                timestamp_ns=order.timestamp_ns,
+                quantity=order.quantity,
+                side=order.side,
+                timeout=self._timeout,
+            )
+        except TimeoutError as e:
+            raise ProducerFull(str(e)) from e
+        except Exception as e:
+            raise ProducerError(f"unexpected producer error: {e}") from e

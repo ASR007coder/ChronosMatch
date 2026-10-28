@@ -7,11 +7,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 import pytest
 
 from simulator.order_generator import OrderGenerator, SimulatorConfig
-from simulator.producer_adapter import IPCProducerAdapter
+from simulator.producer_adapter import (
+    IPCProducerAdapter,
+    ProducerError,
+    ProducerFull,
+)
 
 
 class StubProducer:
-    """Records calls, always accepts. Synchronous, like Asif's code."""
+    """Records calls, always accepts."""
     def __init__(self):
         self.received = []
 
@@ -26,6 +30,18 @@ class RejectingProducer:
     """Returns False."""
     def submit(self, *args, **kwargs):
         return False
+
+
+class TimeoutProducer:
+    """Raises TimeoutError to simulate a full buffer."""
+    def submit(self, *args, **kwargs):
+        raise TimeoutError("buffer full")
+
+
+class CrashProducer:
+    """Raises RuntimeError to simulate an IPC crash."""
+    def submit(self, *args, **kwargs):
+        raise RuntimeError("IPC crashed")
 
 
 @pytest.mark.asyncio
@@ -67,3 +83,23 @@ async def test_adapter_preserves_all_fields():
     assert received[3] == order.timestamp_ns
     assert received[4] == order.quantity
     assert received[5] == order.side
+
+
+@pytest.mark.asyncio
+async def test_adapter_raises_producer_full_on_timeout():
+    adapter = IPCProducerAdapter(TimeoutProducer())
+    gen = OrderGenerator(SimulatorConfig(order_count=1, seed=1))
+    order = gen.next_order()
+
+    with pytest.raises(ProducerFull):
+        await adapter.submit(order)
+
+
+@pytest.mark.asyncio
+async def test_adapter_raises_producer_error_on_crash():
+    adapter = IPCProducerAdapter(CrashProducer())
+    gen = OrderGenerator(SimulatorConfig(order_count=1, seed=1))
+    order = gen.next_order()
+
+    with pytest.raises(ProducerError):
+        await adapter.submit(order)
