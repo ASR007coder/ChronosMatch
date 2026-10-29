@@ -426,7 +426,7 @@
           "Enter a whole number from 1 to 10000.";
         return;
       }
-
+      const startTime = Date.now();
       button.disabled = true;
       button.textContent = "Running...";
       status.textContent =
@@ -438,25 +438,35 @@
       responseSection.classList.add("hidden");
 
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            total_orders: totalOrders
-          })
-        });
 
-        const data = await response.json();
+const response = await fetch(API_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    total_orders: totalOrders
+  })
+});
 
-        if (!response.ok) {
-          throw new Error(
-            typeof data.detail === "string"
-              ? data.detail
-              : JSON.stringify(data)
-          );
-        }
+let data;
+
+try {
+  data = await response.json();
+} catch {
+  throw new Error(
+    `Server returned an invalid response (HTTP ${response.status}).`
+  );
+}
+
+if (!response.ok) {
+  const message =
+    typeof data.detail === "string"
+      ? data.detail
+      : `HTTP ${response.status}: ${response.statusText}`;
+
+  throw new Error(message);
+}
 
         ordersGenerated.textContent =
           data.orders_generated ?? "N/A";
@@ -488,10 +498,15 @@
         status.textContent =
           "Request failed: " + error.message +
           ". Check that the backend is running and the API URL is correct.";
-      } finally {
-        button.disabled = false;
-        button.textContent = "Start Simulation";
-      }
+      }finally {
+  const elapsed = Date.now() - startTime;
+  const remaining = Math.max(0, 500 - elapsed);
+
+  setTimeout(() => {
+    button.disabled = false;
+    button.textContent = "Start Simulation";
+  }, remaining);
+}
     });
   </script>
 </body>
