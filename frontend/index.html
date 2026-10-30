@@ -211,9 +211,12 @@
         value="10"
         required
       >
-
-      <button id="startButton" type="submit">
+     <button id="startButton" type="submit">
         Start Simulation
+      </button>
+
+      <button id="resetButton" type="button">
+        Reset Results
       </button>
     </form>
 
@@ -318,6 +321,7 @@
     const form = document.getElementById("simulationForm");
     const input = document.getElementById("totalOrders");
     const button = document.getElementById("startButton");
+    const resetButton = document.getElementById("resetButton");
     const status = document.getElementById("status");
 
     const metrics = document.getElementById("metrics");
@@ -337,6 +341,27 @@
     const responseSection =
       document.getElementById("responseSection");
     const results = document.getElementById("results");
+    resetButton.addEventListener("click", () => {
+    input.value = 10;
+
+    ordersGenerated.textContent = "—";
+    ordersReceived.textContent = "—";
+    ordersProcessed.textContent = "—";
+    tradesExecuted.textContent = "—";
+
+    trades.replaceChildren();
+    bids.replaceChildren();
+    asks.replaceChildren();
+
+    results.textContent = "";
+
+    metrics.classList.add("hidden");
+    tradeSection.classList.add("hidden");
+    orderBookSection.classList.add("hidden");
+    responseSection.classList.add("hidden");
+
+    status.textContent = "Ready to start.";
+});
 
     function addCell(row, value) {
       const cell = document.createElement("td");
