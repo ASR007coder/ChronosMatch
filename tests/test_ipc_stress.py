@@ -10,7 +10,7 @@ from ipc.ring_buffer import RingBuffer
 
 
 TOTAL_ORDERS = 10_000
-CONSUMER_TIMEOUT = 30
+CONSUMER_TIMEOUT = 2
 
 
 def producer_worker(
