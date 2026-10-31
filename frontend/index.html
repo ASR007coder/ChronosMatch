@@ -96,6 +96,7 @@
       margin: 0;
       color: #2458d3;
       font-size: 30px;
+      overflow-wrap: anywhere;
     }
 
     h3 {
@@ -211,7 +212,8 @@
         value="10"
         required
       >
-     <button id="startButton" type="submit">
+
+      <button id="startButton" type="submit">
         Start Simulation
       </button>
 
@@ -224,10 +226,12 @@
       Ready to start.
     </p>
 
+    <!-- Simulation Metrics -->
     <section id="metrics" class="hidden">
       <h3>Simulation Metrics</h3>
 
       <div class="metric-grid">
+
         <div class="metric-card">
           <p>Orders Generated</p>
           <h2 id="ordersGenerated">—</h2>
@@ -247,9 +251,26 @@
           <p>Trades Executed</p>
           <h2 id="tradesExecuted">—</h2>
         </div>
+
+        <div class="metric-card">
+          <p>Processing Time (ms)</p>
+          <h2 id="processingTime">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Average Latency (ms)</p>
+          <h2 id="averageLatency">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Throughput (orders/sec)</p>
+          <h2 id="throughput">—</h2>
+        </div>
+
       </div>
     </section>
 
+    <!-- Trade Details -->
     <section id="tradeSection" class="hidden">
       <h3>Trade Details</h3>
 
@@ -264,16 +285,18 @@
               <th>Quantity</th>
             </tr>
           </thead>
+
           <tbody id="trades"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- New Order Book section -->
+    <!-- Order Book -->
     <section id="orderBookSection" class="hidden">
       <h3>Order Book</h3>
 
       <div class="order-book-grid">
+
         <div>
           <h4>Bids (Buy Orders)</h4>
 
@@ -285,6 +308,7 @@
                   <th>Quantity</th>
                 </tr>
               </thead>
+
               <tbody id="bids"></tbody>
             </table>
           </div>
@@ -301,78 +325,127 @@
                   <th>Quantity</th>
                 </tr>
               </thead>
+
               <tbody id="asks"></tbody>
             </table>
           </div>
         </div>
+
       </div>
     </section>
 
+    <!-- Full Backend Response -->
     <section id="responseSection" class="hidden">
       <h3>Full Backend Response</h3>
       <pre id="results"></pre>
     </section>
+
   </main>
 
   <script>
     const API_URL =
       "http://127.0.0.1:8000/api/v1/simulator/start";
 
+    // HTML elements
     const form = document.getElementById("simulationForm");
     const input = document.getElementById("totalOrders");
     const button = document.getElementById("startButton");
     const resetButton = document.getElementById("resetButton");
     const status = document.getElementById("status");
 
+    // Metrics
     const metrics = document.getElementById("metrics");
-    const ordersGenerated = document.getElementById("ordersGenerated");
-    const ordersReceived = document.getElementById("ordersReceived");
-    const ordersProcessed = document.getElementById("ordersProcessed");
-    const tradesExecuted = document.getElementById("tradesExecuted");
 
-    const tradeSection = document.getElementById("tradeSection");
-    const trades = document.getElementById("trades");
+    const ordersGenerated =
+      document.getElementById("ordersGenerated");
 
+    const ordersReceived =
+      document.getElementById("ordersReceived");
+
+    const ordersProcessed =
+      document.getElementById("ordersProcessed");
+
+    const tradesExecuted =
+      document.getElementById("tradesExecuted");
+
+    const processingTime =
+      document.getElementById("processingTime");
+
+    const averageLatency =
+      document.getElementById("averageLatency");
+
+    const throughput =
+      document.getElementById("throughput");
+
+    // Trade section
+    const tradeSection =
+      document.getElementById("tradeSection");
+
+    const trades =
+      document.getElementById("trades");
+
+    // Order book
     const orderBookSection =
       document.getElementById("orderBookSection");
+
     const bids = document.getElementById("bids");
     const asks = document.getElementById("asks");
 
+    // Backend response
     const responseSection =
       document.getElementById("responseSection");
-    const results = document.getElementById("results");
+
+    const results =
+      document.getElementById("results");
+
+
+    // Reset Results
     resetButton.addEventListener("click", () => {
-    input.value = 10;
 
-    ordersGenerated.textContent = "—";
-    ordersReceived.textContent = "—";
-    ordersProcessed.textContent = "—";
-    tradesExecuted.textContent = "—";
+      input.value = 10;
 
-    trades.replaceChildren();
-    bids.replaceChildren();
-    asks.replaceChildren();
+      ordersGenerated.textContent = "—";
+      ordersReceived.textContent = "—";
+      ordersProcessed.textContent = "—";
+      tradesExecuted.textContent = "—";
 
-    results.textContent = "";
+      processingTime.textContent = "—";
+      averageLatency.textContent = "—";
+      throughput.textContent = "—";
 
-    metrics.classList.add("hidden");
-    tradeSection.classList.add("hidden");
-    orderBookSection.classList.add("hidden");
-    responseSection.classList.add("hidden");
+      trades.replaceChildren();
+      bids.replaceChildren();
+      asks.replaceChildren();
 
-    status.textContent = "Ready to start.";
-});
+      results.textContent = "";
 
+      metrics.classList.add("hidden");
+      tradeSection.classList.add("hidden");
+      orderBookSection.classList.add("hidden");
+      responseSection.classList.add("hidden");
+
+      status.textContent = "Ready to start.";
+    });
+
+
+    // Add table cell
     function addCell(row, value) {
+
       const cell = document.createElement("td");
+
       cell.textContent = value ?? "N/A";
+
       row.appendChild(cell);
     }
 
+
+    // Display Trades
     function displayTrades(tradeList) {
+
       trades.replaceChildren();
 
       if (!Array.isArray(tradeList) || tradeList.length === 0) {
+
         const row = document.createElement("tr");
         const cell = document.createElement("td");
 
@@ -382,10 +455,12 @@
 
         row.appendChild(cell);
         trades.appendChild(row);
+
         return;
       }
 
       tradeList.forEach((trade) => {
+
         const row = document.createElement("tr");
 
         addCell(row, trade.trade_id);
@@ -398,33 +473,44 @@
       });
     }
 
-    // Display bids and asks from the backend order book.
+
+    // Display Order Book
     function displayOrderBook(orderBook) {
+
       bids.replaceChildren();
       asks.replaceChildren();
 
       function displaySide(tableBody, orders, sideName) {
+
         if (!Array.isArray(orders) || orders.length === 0) {
+
           const row = document.createElement("tr");
           const cell = document.createElement("td");
 
           cell.colSpan = 2;
           cell.className = "empty-message";
-          cell.textContent = `No ${sideName.toLowerCase()} orders.`;
+
+          cell.textContent =
+            `No ${sideName.toLowerCase()} orders.`;
 
           row.appendChild(cell);
           tableBody.appendChild(row);
+
           return;
         }
 
         orders.forEach((order) => {
+
           const row = document.createElement("tr");
 
-          // Backend order-book entries are [price, quantity].
+          // Order book entries are [price, quantity].
           if (Array.isArray(order)) {
+
             addCell(row, order[0]);
             addCell(row, order[1]);
+
           } else {
+
             addCell(row, order.price);
             addCell(row, order.quantity);
           }
@@ -437,7 +523,10 @@
       displaySide(asks, orderBook?.asks, "Ask");
     }
 
+
+    // Start Simulation
     form.addEventListener("submit", async (event) => {
+
       event.preventDefault();
 
       const totalOrders = Number(input.value);
@@ -447,13 +536,18 @@
         totalOrders < 1 ||
         totalOrders > 10000
       ) {
+
         status.textContent =
           "Enter a whole number from 1 to 10000.";
+
         return;
       }
+
       const startTime = Date.now();
+
       button.disabled = true;
       button.textContent = "Running...";
+
       status.textContent =
         "Simulation is running. Please wait...";
 
@@ -464,35 +558,49 @@
 
       try {
 
-const response = await fetch(API_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    total_orders: totalOrders
-  })
-});
+        // Send POST request to backend
+        const response = await fetch(API_URL, {
 
-let data;
+          method: "POST",
 
-try {
-  data = await response.json();
-} catch {
-  throw new Error(
-    `Server returned an invalid response (HTTP ${response.status}).`
-  );
-}
+          headers: {
+            "Content-Type": "application/json"
+          },
 
-if (!response.ok) {
-  const message =
-    typeof data.detail === "string"
-      ? data.detail
-      : `HTTP ${response.status}: ${response.statusText}`;
+          body: JSON.stringify({
+            total_orders: totalOrders
+          })
+        });
 
-  throw new Error(message);
-}
 
+        // Read backend response
+        let data;
+
+        try {
+
+          data = await response.json();
+
+        } catch {
+
+          throw new Error(
+            `Server returned an invalid response (HTTP ${response.status}).`
+          );
+        }
+
+
+        // Check API errors
+        if (!response.ok) {
+
+          const message =
+            typeof data.detail === "string"
+              ? data.detail
+              : `HTTP ${response.status}: ${response.statusText}`;
+
+          throw new Error(message);
+        }
+
+
+        // Display order metrics
         ordersGenerated.textContent =
           data.orders_generated ?? "N/A";
 
@@ -505,34 +613,72 @@ if (!response.ok) {
         tradesExecuted.textContent =
           data.trades_executed ?? "N/A";
 
+
+        // Display performance metrics
+        processingTime.textContent =
+          data.processing_time_ms != null
+            ? data.processing_time_ms + " ms"
+            : "N/A";
+
+        averageLatency.textContent =
+          data.average_latency_ms != null
+            ? data.average_latency_ms + " ms"
+            : "N/A";
+
+        throughput.textContent =
+          data.throughput_orders_per_second != null
+            ? Number(data.throughput_orders_per_second).toLocaleString()
+              + " orders/sec"
+            : "N/A";
+
+
+        // Show metrics
         metrics.classList.remove("hidden");
 
+
+        // Display trades
         displayTrades(data.trades);
+
         tradeSection.classList.remove("hidden");
 
+
+        // Display order book
         displayOrderBook(data.order_book);
+
         orderBookSection.classList.remove("hidden");
 
-        results.textContent = JSON.stringify(data, null, 2);
+
+        // Display complete response
+        results.textContent =
+          JSON.stringify(data, null, 2);
+
         responseSection.classList.remove("hidden");
+
 
         status.textContent =
           "Simulation completed successfully.";
 
       } catch (error) {
+
         status.textContent =
           "Request failed: " + error.message +
           ". Check that the backend is running and the API URL is correct.";
-      }finally {
-  const elapsed = Date.now() - startTime;
-  const remaining = Math.max(0, 500 - elapsed);
 
-  setTimeout(() => {
-    button.disabled = false;
-    button.textContent = "Start Simulation";
-  }, remaining);
-}
+      } finally {
+
+        const elapsed = Date.now() - startTime;
+
+        const remaining = Math.max(0, 500 - elapsed);
+
+        setTimeout(() => {
+
+          button.disabled = false;
+          button.textContent = "Start Simulation";
+
+        }, remaining);
+      }
     });
+
   </script>
 </body>
 </html>

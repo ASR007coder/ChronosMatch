@@ -1,4 +1,5 @@
 
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -49,7 +50,25 @@ def start_simulation(request: SimulationRequest):
 
         orders.append(order)
 
+    # Calculate performance
+    start_time = time.perf_counter()
+
     metrics, trades = run_orders(orders, engine=engine)
+
+    end_time = time.perf_counter()
+
+    processing_time = end_time - start_time
+    processing_time_ms = processing_time * 1000
+
+    average_latency_ms = (
+        processing_time_ms / metrics.orders_processed
+        if metrics.orders_processed > 0 else 0
+    )
+
+    throughput = (
+        metrics.orders_processed / processing_time
+        if processing_time > 0 else 0
+    )
 
     bids, asks = engine.depth(5)
 
@@ -59,6 +78,9 @@ def start_simulation(request: SimulationRequest):
         "orders_processed": metrics.orders_processed,
         "trades_executed": metrics.trades_executed,
         "errors": metrics.errors,
+        "processing_time_ms": round(processing_time_ms, 3),
+        "average_latency_ms": round(average_latency_ms, 3),
+        "throughput_orders_per_second": round(throughput, 2),
         "trades": [
             trade._asdict() for trade in trades
         ],
