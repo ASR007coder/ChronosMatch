@@ -207,3 +207,17 @@ As per the Week 3 roadmap, we are beginning the deep improvement phase.
 - [ ] TODO: Verify IPC retry logic does not cause duplicate orders (Day 3).
 
 Status: **Audit Complete**.
+
+
+
+## 19. Week 4: Final Integration Support
+
+- Simulator is fully merged and ready for FastAPI integration.
+- Runner class (`SimulatorRun`) exposes lifecycle control (`start`, `stop`) and JSON-ready metrics (`snapshot`).
+- Assisting Asif and Vijay with final dashboard integration and testing.
+
+## 20. Week 4 Final Submission
+
+- All simulator code is finalized and merged.
+- FastAPI runner (`SimulatorRun`) is ready for the final demonstration.
+- Week 3 deep improvements (stress testing, timeouts, E2E pipeline) are complete.
