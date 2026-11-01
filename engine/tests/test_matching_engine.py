@@ -260,3 +260,29 @@ def test_matches_naive_oracle_and_invariants(engine_cls, seed):
 
     # Each traded unit consumes one buy unit and one sell unit.
     assert submitted == 2 * traded + resting
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        (1, BUY, 100.5, 5, 1),   # float price
+        (1, BUY, 100, 5.5, 1),   # float quantity
+        (1, BUY, "100", 5, 1),   # string price
+        (1, BUY, 100, "5", 1),   # string quantity
+        (1, BUY, True, 5, 1),    # boolean price
+        (1, BUY, 100, True, 1),  # boolean quantity
+    ],
+)
+def test_non_integer_order_values_rejected_without_state_change(engine, args):
+    engine.submit(10, BUY, 99, 10, 10)
+
+    before_book = engine.depth()
+    before_orders = engine.orders_processed
+    before_trades = engine.trades_executed
+
+    with pytest.raises(ValueError):
+        engine.submit(*args)
+
+    assert engine.depth() == before_book
+    assert engine.orders_processed == before_orders
+    assert engine.trades_executed == before_trades
