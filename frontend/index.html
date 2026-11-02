@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChronosMatch Simulator</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #f1f5f9;
+      color: #172033;
+      font-family: Arial, sans-serif;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 28px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px #00000012;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    p {
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin: 24px 0 8px;
+      font-weight: bold;
+    }
+
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 12px;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    input {
+      border: 1px solid #cbd5e1;
+    }
+
+    button {
+      margin-top: 14px;
+      border: none;
+      background: #2458d3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1947b5;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid #dbe3ee;
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .metric-card p {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .metric-card h2 {
+      margin: 0;
+      color: #2458d3;
+      font-size: 30px;
+      overflow-wrap: anywhere;
+    }
+
+    h3 {
+      margin-top: 28px;
+    }
+
+    h4 {
+      margin-top: 22px;
+    }
+
+    pre {
+      padding: 14px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-x: auto;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid #dbe3ee;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .empty-message {
+      padding: 16px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    .order-book-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .order-book-grid h4 {
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      main {
+        margin: 10px auto;
+        padding: 18px;
+      }
+
+      .metric-grid,
+      .order-book-grid {
+        grid-template-columns: 1fr;
+      }
+
+      th, td {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>ChronosMatch Simulator</h1>
+
+    <p>
+      Run a simulation and view the matching engine's response.
+    </p>
+
+    <form id="simulationForm">
+      <label for="totalOrders">Total orders (1–10,000)</label>
+
+      <input
+        id="totalOrders"
+        type="number"
+        min="1"
+        max="10000"
+        step="1"
+        value="10"
+        required
+      >
+
+      <button id="startButton" type="submit">
+        Start Simulation
+      </button>
+
+      <button id="resetButton" type="button">
+        Reset Results
+      </button>
+    </form>
+
+    <p id="status" role="status" aria-live="polite">
+      Ready to start.
+    </p>
+
+    <!-- Simulation Metrics -->
+    <section id="metrics" class="hidden">
+      <h3>Simulation Metrics</h3>
+
+      <div class="metric-grid">
+
+        <div class="metric-card">
+          <p>Orders Generated</p>
+          <h2 id="ordersGenerated">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Orders Received</p>
+          <h2 id="ordersReceived">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Orders Processed</p>
+          <h2 id="ordersProcessed">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Trades Executed</p>
+          <h2 id="tradesExecuted">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Processing Time (ms)</p>
+          <h2 id="processingTime">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Average Latency (ms)</p>
+          <h2 id="averageLatency">—</h2>
+        </div>
+
+        <div class="metric-card">
+          <p>Throughput (orders/sec)</p>
+          <h2 id="throughput">—</h2>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Trade Details -->
+    <section id="tradeSection" class="hidden">
+      <h3>Trade Details</h3>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Trade ID</th>
+              <th>Buy Order ID</th>
+              <th>Sell Order ID</th>
+              <th>Price</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+
+          <tbody id="trades"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Order Book -->
+    <section id="orderBookSection" class="hidden">
+      <h3>Order Book</h3>
+
+      <div class="order-book-grid">
+
+        <div>
+          <h4>Bids (Buy Orders)</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+
+              <tbody id="bids"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h4>Asks (Sell Orders)</h4>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+
+              <tbody id="asks"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Full Backend Response -->
+    <section id="responseSection" class="hidden">
+      <h3>Full Backend Response</h3>
+      <pre id="results"></pre>
+    </section>
+
+  </main>
+
+  <script>
+    const API_URL =
+      "http://127.0.0.1:8000/api/v1/simulator/start";
+
+    // HTML elements
+    const form = document.getElementById("simulationForm");
+    const input = document.getElementById("totalOrders");
+    const button = document.getElementById("startButton");
+    const resetButton = document.getElementById("resetButton");
+    const status = document.getElementById("status");
+
+    // Metrics
+    const metrics = document.getElementById("metrics");
+
+    const ordersGenerated =
+      document.getElementById("ordersGenerated");
+
+    const ordersReceived =
+      document.getElementById("ordersReceived");
+
+    const ordersProcessed =
+      document.getElementById("ordersProcessed");
+
+    const tradesExecuted =
+      document.getElementById("tradesExecuted");
+
+    const processingTime =
+      document.getElementById("processingTime");
+
+    const averageLatency =
+      document.getElementById("averageLatency");
+
+    const throughput =
+      document.getElementById("throughput");
+
+    // Trade section
+    const tradeSection =
+      document.getElementById("tradeSection");
+
+    const trades =
+      document.getElementById("trades");
+
+    // Order book
+    const orderBookSection =
+      document.getElementById("orderBookSection");
+
+    const bids = document.getElementById("bids");
+    const asks = document.getElementById("asks");
+
+    // Backend response
+    const responseSection =
+      document.getElementById("responseSection");
+
+    const results =
+      document.getElementById("results");
+
+
+    // Reset Results
+    resetButton.addEventListener("click", () => {
+
+      input.value = 10;
+
+      ordersGenerated.textContent = "—";
+      ordersReceived.textContent = "—";
+      ordersProcessed.textContent = "—";
+      tradesExecuted.textContent = "—";
+
+      processingTime.textContent = "—";
+      averageLatency.textContent = "—";
+      throughput.textContent = "—";
+
+      trades.replaceChildren();
+      bids.replaceChildren();
+      asks.replaceChildren();
+
+      results.textContent = "";
+
+      metrics.classList.add("hidden");
+      tradeSection.classList.add("hidden");
+      orderBookSection.classList.add("hidden");
+      responseSection.classList.add("hidden");
+
+      status.textContent = "Ready to start.";
+    });
+
+
+    // Add table cell
+    function addCell(row, value) {
+
+      const cell = document.createElement("td");
+
+      cell.textContent = value ?? "N/A";
+
+      row.appendChild(cell);
+    }
+
+
+    // Display Trades
+    function displayTrades(tradeList) {
+
+      trades.replaceChildren();
+
+      if (!Array.isArray(tradeList) || tradeList.length === 0) {
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 5;
+        cell.className = "empty-message";
+        cell.textContent = "No trades were executed.";
+
+        row.appendChild(cell);
+        trades.appendChild(row);
+
+        return;
+      }
+
+      tradeList.forEach((trade) => {
+
+        const row = document.createElement("tr");
+
+        addCell(row, trade.trade_id);
+        addCell(row, trade.buy_order_id);
+        addCell(row, trade.sell_order_id);
+        addCell(row, trade.price);
+        addCell(row, trade.quantity);
+
+        trades.appendChild(row);
+      });
+    }
+
+
+    // Display Order Book
+    function displayOrderBook(orderBook) {
+
+      bids.replaceChildren();
+      asks.replaceChildren();
+
+      function displaySide(tableBody, orders, sideName) {
+
+        if (!Array.isArray(orders) || orders.length === 0) {
+
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+
+          cell.colSpan = 2;
+          cell.className = "empty-message";
+
+          cell.textContent =
+            `No ${sideName.toLowerCase()} orders.`;
+
+          row.appendChild(cell);
+          tableBody.appendChild(row);
+
+          return;
+        }
+
+        orders.forEach((order) => {
+
+          const row = document.createElement("tr");
+
+          // Order book entries are [price, quantity].
+          if (Array.isArray(order)) {
+
+            addCell(row, order[0]);
+            addCell(row, order[1]);
+
+          } else {
+
+            addCell(row, order.price);
+            addCell(row, order.quantity);
+          }
+
+          tableBody.appendChild(row);
+        });
+      }
+
+      displaySide(bids, orderBook?.bids, "Bid");
+      displaySide(asks, orderBook?.asks, "Ask");
+    }
+
+
+    // Start Simulation
+    form.addEventListener("submit", async (event) => {
+
+      event.preventDefault();
+
+      const totalOrders = Number(input.value);
+
+      if (
+        !Number.isInteger(totalOrders) ||
+        totalOrders < 1 ||
+        totalOrders > 10000
+      ) {
+
+        status.textContent =
+          "Enter a whole number from 1 to 10000.";
+
+        return;
+      }
+
+      const startTime = Date.now();
+
+      button.disabled = true;
+      button.textContent = "Running...";
+
+      status.textContent =
+        "Simulation is running. Please wait...";
+
+      metrics.classList.add("hidden");
+      tradeSection.classList.add("hidden");
+      orderBookSection.classList.add("hidden");
+      responseSection.classList.add("hidden");
+
+      try {
+
+        // Send POST request to backend
+        const response = await fetch(API_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            total_orders: totalOrders
+          })
+        });
+
+
+        // Read backend response
+        let data;
+
+        try {
+
+          data = await response.json();
+
+        } catch {
+
+          throw new Error(
+            `Server returned an invalid response (HTTP ${response.status}).`
+          );
+        }
+
+
+        // Check API errors
+        if (!response.ok) {
+
+          const message =
+            typeof data.detail === "string"
+              ? data.detail
+              : `HTTP ${response.status}: ${response.statusText}`;
+
+          throw new Error(message);
+        }
+
+
+        // Display order metrics
+        ordersGenerated.textContent =
+          data.orders_generated ?? "N/A";
+
+        ordersReceived.textContent =
+          data.orders_received ?? "N/A";
+
+        ordersProcessed.textContent =
+          data.orders_processed ?? "N/A";
+
+        tradesExecuted.textContent =
+          data.trades_executed ?? "N/A";
+
+
+        // Display performance metrics
+        processingTime.textContent =
+          data.processing_time_ms != null
+            ? data.processing_time_ms + " ms"
+            : "N/A";
+
+        averageLatency.textContent =
+          data.average_latency_ms != null
+            ? data.average_latency_ms + " ms"
+            : "N/A";
+
+        throughput.textContent =
+          data.throughput_orders_per_second != null
+            ? Number(data.throughput_orders_per_second).toLocaleString()
+              + " orders/sec"
+            : "N/A";
+
+
+        // Show metrics
+        metrics.classList.remove("hidden");
+
+
+        // Display trades
+        displayTrades(data.trades);
+
+        tradeSection.classList.remove("hidden");
+
+
+        // Display order book
+        displayOrderBook(data.order_book);
+
+        orderBookSection.classList.remove("hidden");
+
+
+        // Display complete response
+        results.textContent =
+          JSON.stringify(data, null, 2);
+
+        responseSection.classList.remove("hidden");
+
+
+        status.textContent =
+          "Simulation completed successfully.";
+
+      } catch (error) {
+
+        status.textContent =
+          "Request failed: " + error.message +
+          ". Check that the backend is running and the API URL is correct.";
+
+      } finally {
+
+        const elapsed = Date.now() - startTime;
+
+        const remaining = Math.max(0, 500 - elapsed);
+
+        setTimeout(() => {
+
+          button.disabled = false;
+          button.textContent = "Start Simulation";
+
+        }, remaining);
+      }
+    });
+
+  </script>
+</body>
+</html>
