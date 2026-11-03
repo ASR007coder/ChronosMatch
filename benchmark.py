@@ -1,5 +1,6 @@
 
 import time
+import statistics
 
 from engine.models import BUY, SELL, Order
 from engine.matching_engine import MatchingEngine
@@ -58,36 +59,58 @@ def run_benchmark(total_orders):
 
 def main():
     test_sizes = [100, 1000, 10000]
+    runs = 5
 
     print("\nCHRONOSMATCH PERFORMANCE BENCHMARK")
+    print(f"Number of runs per test: {runs}")
     print("=" * 85)
 
     print(
         f"{'Orders':<12}"
         f"{'Processed':<12}"
         f"{'Trades':<10}"
-        f"{'Time (ms)':<15}"
-        f"{'Latency (ms)':<15}"
-        f"{'Throughput/sec':<18}"
+        f"{'Avg Time (ms)':<17}"
+        f"{'Avg Latency (ms)':<19}"
+        f"{'Avg Throughput/sec':<20}"
         f"{'Errors':<8}"
     )
 
-    print("-" * 85)
+    print("-" * 101)
 
     for size in test_sizes:
-        result = run_benchmark(size)
+        results = []
 
-        print(
-            f"{result['orders']:<12}"
-            f"{result['processed']:<12}"
-            f"{result['trades']:<10}"
-            f"{result['processing_time_ms']:<15.3f}"
-            f"{result['average_latency_ms']:<15.6f}"
-            f"{result['throughput']:<18.2f}"
-            f"{result['errors']:<8}"
+        # Run benchmark five times
+        for _ in range(runs):
+            result = run_benchmark(size)
+            results.append(result)
+
+        avg_time = statistics.mean(
+            r["processing_time_ms"] for r in results
         )
 
-    print("=" * 85)
+        avg_latency = statistics.mean(
+            r["average_latency_ms"] for r in results
+        )
+
+        avg_throughput = statistics.mean(
+            r["throughput"] for r in results
+        )
+
+        # Verify that all runs processed the expected orders
+        total_errors = sum(r["errors"] for r in results)
+
+        print(
+            f"{size:<12}"
+            f"{results[-1]['processed']:<12}"
+            f"{results[-1]['trades']:<10}"
+            f"{avg_time:<17.3f}"
+            f"{avg_latency:<19.6f}"
+            f"{avg_throughput:<20.2f}"
+            f"{total_errors:<8}"
+        )
+
+    print("=" * 101)
 
 
 if __name__ == "__main__":
