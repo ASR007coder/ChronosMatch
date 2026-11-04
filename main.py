@@ -89,3 +89,11 @@ def start_simulation(request: SimulationRequest):
             "asks": asks
         }
     }
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "project": "ChronosMatch",
+        "message": "Backend is running successfully"
+    }
