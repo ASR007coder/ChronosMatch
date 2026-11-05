@@ -1,4 +1,3 @@
-
 # cython: language_level=3
 
 """Cython-compiled matching engine.
@@ -35,10 +34,12 @@ class CythonMatchingEngine:
     def submit(self, order_id, side, price, quantity, sequence):
         validate_order(side, price, quantity)
 
-        if sequence <= self._last_sequence:
+        last_sequence = self._last_sequence
+
+        if sequence <= last_sequence:
             raise ValueError(
                 f"sequence {sequence} is not greater than last processed "
-                f"{self._last_sequence} (duplicate or out-of-order order)"
+                f"{last_sequence} (duplicate or out-of-order order)"
             )
 
         self._last_sequence = sequence
@@ -55,12 +56,21 @@ class CythonMatchingEngine:
             opposite = book.bids
             own = book.asks
 
+        # Cache frequently accessed objects and methods locally.
+        levels = opposite.levels
+        best_price = opposite.best_price
+        pop_best = opposite.pop_best
+        rest = own.rest
+
         trades = []
         remaining = quantity
-        best = opposite.best_price()
+        best = best_price()
+
+        next_trade_id = self._next_trade_id
 
         while remaining and best is not None:
 
+            # Stop immediately if the best available price cannot match.
             if is_buy:
                 if best > price:
                     break
@@ -68,13 +78,18 @@ class CythonMatchingEngine:
                 if best < price:
                     break
 
-            level = opposite.levels[best]
+            level = levels[best]
+            popleft = level.popleft
 
             while remaining and level:
                 resting = level[0]
                 resting_qty = resting[1]
 
-                fill = min(remaining, resting_qty)
+                # Avoid calling Python's built-in min() for every fill.
+                if remaining < resting_qty:
+                    fill = remaining
+                else:
+                    fill = resting_qty
 
                 if is_buy:
                     buy_id = order_id
@@ -84,7 +99,7 @@ class CythonMatchingEngine:
                     sell_id = order_id
 
                 trades.append((
-                    self._next_trade_id,
+                    next_trade_id,
                     buy_id,
                     sell_id,
                     best,
@@ -92,22 +107,31 @@ class CythonMatchingEngine:
                     sequence,
                 ))
 
-                self._next_trade_id += 1
+                next_trade_id += 1
                 remaining -= fill
 
                 if fill == resting_qty:
-                    level.popleft()
+                    popleft()
                 else:
                     resting[1] = resting_qty - fill
 
+            # Only request another best price if this level was exhausted.
             if not level:
-                opposite.pop_best()
+                pop_best()
 
-            best = opposite.best_price()
+                if remaining:
+                    best = best_price()
+                else:
+                    break
+            else:
+                # The level still has resting orders, so the incoming
+                # order must have been completely filled.
+                break
 
         if remaining:
-            own.rest(price, order_id, remaining)
+            rest(price, order_id, remaining)
 
+        self._next_trade_id = next_trade_id
         self.trades_executed += len(trades)
 
         return trades
