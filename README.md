@@ -209,31 +209,35 @@ The current buy/sell market visualization is illustrative frontend animation. It
 
 ## 4. Team Members and Responsibilities
 
-### 4.1 Kavya — Market Simulator and Order Generation
+###  4.1 Kavya — Market Simulator and Order Generation
 
 Kavya is responsible for the market simulation and order-generation component.
 
-Her work focuses on generating structured market orders that can be used by the matching engine pipeline.
+Her work focuses on generating structured market orders, integrating with the IPC layer, and providing the FastAPI lifecycle management for the pipeline.
 
 **Major responsibilities:**
 
-- Designing the market order format.
-- Defining the structure of order information.
-- Implementing order-generation components.
-- Generating deterministic market workloads.
-- Supporting configurable order-generation behavior.
-- Preparing order data for downstream processing.
+- Designing the 64-byte binary market order format with validation.
+- Implementing the deterministic order-generation components.
+- Generating 4 deterministic market workloads (mixed, marketable, non-marketable, burst).
+- Building the IPC Producer Adapter with timeout and backpressure handling.
+- Building the FastAPI Lifecycle Manager (`runner.py`).
+- Writing 85+ unit, stress, and end-to-end integration tests.
+- Achieving 931,000 orders/sec in benchmarks without data loss.
 
 **Key project components:**
 
-- `docs/order-format.md`
-- `pipeline/order_format.py`
-- `pipeline/order_generator.py`
-- Market order generation and serialization-related components.
+- `simulator/order_format.py`
+- `simulator/order_generator.py`
+- `simulator/workload.py`
+- `simulator/market_simulator.py`
+- `simulator/producer_adapter.py`
+- `simulator/runner.py`
+- `tests/simulator/` and `tests/integration/`
 
 **Contribution to ChronosMatch:**
 
-Kavya's work provides the input workload for the complete system. Without a consistent order format and reliable workload generation, the IPC pipeline and matching engine cannot be evaluated against a repeatable market workload.
+Kavya's work provides the input workload for the complete system. Her simulator generates reproducible orders, handles IPC timeouts safely, and exposes JSON metrics via FastAPI, ensuring the pipeline can be tested reliably end-to-end.
 
 ---
 
