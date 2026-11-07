@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080a0c">
+    <title>ChronosMatch | Trading Simulator</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- HEADER -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-mark">C</div>
+            <div>
+                <h1>CHRONOS<span>MATCH</span></h1>
+                <p>LOW LATENCY MATCHING ENGINE</p>
+            </div>
+        </div>
+
+        <div class="connection">
+            <span class="status-dot"></span>
+            <span id="connection-status">SYSTEM ONLINE</span>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- HERO -->
+        <section class="hero">
+            <div>
+                <p class="eyebrow">SIMULATION CONTROL CENTER</p>
+                <h2>Market Simulation</h2>
+                <p class="subtitle">
+                    Execute workloads and monitor matching engine performance.
+                </p>
+            </div>
+        </section>
+
+        <!-- 01: SIMULATION CONFIGURATION -->
+        <section class="control-panel panel">
+
+            <div class="panel-heading">
+                <div>
+                    <p class="section-label">01 / CONFIGURATION</p>
+                    <h3>Simulation Setup</h3>
+                </div>
+                <span class="live-label">READY</span>
+            </div>
+
+            <form id="simulation-form">
+                <div class="form-row">
+
+                    <div class="input-group">
+                        <label for="order-count">TOTAL ORDERS</label>
+
+                        <input
+                            type="number"
+                            id="order-count"
+                            value="1000000"
+                            min="10000"
+                            max="10000000"
+                            step="1"
+                            required
+                        >
+
+                        <small>
+                            Minimum: 10,000 · Maximum: 10,000,000
+                        </small>
+                    </div>
+
+                    <button type="submit" id="start-button">
+                        <span id="button-text">START SIMULATION</span>
+                        <span class="button-arrow">→</span>
+                    </button>
+
+                </div>
+            </form>
+
+            <div class="simulation-status">
+                <div class="status-indicator">
+                    <span class="status-dot" id="simulation-dot"></span>
+                    <span id="simulation-status">IDLE</span>
+                </div>
+
+                <span id="simulation-message">
+                    Waiting for simulation command
+                </span>
+            </div>
+
+        </section>
+
+        <!-- 02: SIMULATED EXCHANGE VISUALIZATION -->
+        <section class="panel exchange-panel">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">02 / MARKET ACTIVITY</p>
+                    <h3>Exchange Visualization</h3>
+                    <p class="subtitle">
+                        Illustrative buy and sell activity during simulation.
+                    </p>
+                </div>
+
+                <span class="visual-status" id="visual-status">
+                    <span class="status-dot"></span>
+                    WAITING
+                </span>
+            </div>
+
+            <div class="exchange-visual">
+
+                <!-- BUY / SELL ORDER FLOW -->
+                <div class="order-flow">
+
+                    <!-- BUY SIDE -->
+                    <div class="flow-side buy-side">
+                        <h3>
+                            <span class="side-indicator buy-indicator"></span>
+                            BUY ORDERS
+                        </h3>
+
+                        <div id="buy-flow" class="flow-items">
+                            <div class="empty-tape">Waiting for activity...</div>
+                        </div>
+
+                        <div class="flow-total">
+                            <span>BUY VOLUME</span>
+                            <strong id="buy-volume">0</strong>
+                        </div>
+                    </div>
+
+                    <!-- MATCHING ENGINE -->
+                    <div class="matching-core">
+
+                        <div class="core-ring">
+                            <div class="core-inner">
+                                <span class="core-icon">⇄</span>
+                                <strong>CHRONOS</strong>
+                                <small>MATCHING ENGINE</small>
+                            </div>
+                        </div>
+
+                        <span class="engine-status" id="engine-status">
+                            STANDBY
+                        </span>
+
+                    </div>
+
+                    <!-- SELL SIDE -->
+                    <div class="flow-side sell-side">
+                        <h3>
+                            <span class="side-indicator sell-indicator"></span>
+                            SELL ORDERS
+                        </h3>
+
+                        <div id="sell-flow" class="flow-items">
+                            <div class="empty-tape">Waiting for activity...</div>
+                        </div>
+
+                        <div class="flow-total">
+                            <span>SELL VOLUME</span>
+                            <strong id="sell-volume">0</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- VISUALIZATION COUNTERS -->
+                <div class="exchange-stats">
+
+                    <div>
+                        <span>SIMULATED ORDERS</span>
+                        <strong id="visual-orders">0</strong>
+                    </div>
+
+                    <div>
+                        <span>SIMULATED TRADES</span>
+                        <strong id="visual-trades">0</strong>
+                    </div>
+
+                    <div>
+                        <span>LAST TRADE PRICE</span>
+                        <strong id="visual-price">--</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- TRADE TAPE -->
+            <div class="trade-tape">
+
+                <div class="tape-heading">
+                    <h3>TRADE TAPE</h3>
+                    <span>ILLUSTRATIVE EXECUTIONS</span>
+                </div>
+
+                <div class="tape-columns">
+                    <span>TIME</span>
+                    <span>BUY / SELL</span>
+                    <span>PRICE</span>
+                    <span>QUANTITY</span>
+                </div>
+
+                <div id="trade-tape-body" class="trade-tape-body">
+                    <div class="empty-tape">
+                        Waiting for market activity...
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="visual-disclaimer">
+                VISUAL PREVIEW ONLY — Displayed market activity is simulated
+                independently of the actual matching engine.
+            </p>
+
+        </section>
+
+        <!-- 03: PERFORMANCE OVERVIEW -->
+        <section class="metrics-section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">03 / PERFORMANCE</p>
+                    <h3>Simulation Overview</h3>
+                </div>
+
+                <span class="section-note">LATEST RUN</span>
+            </div>
+
+            <div class="metrics-grid">
+
+                <article class="metric-card">
+                    <p>ORDERS PROCESSED</p>
+                    <h2 id="orders-processed">—</h2>
+                    <span>Matching engine</span>
+                </article>
+
+                <article class="metric-card">
+                    <p>THROUGHPUT</p>
+                    <h2 id="throughput">—</h2>
+                    <span>Orders / second</span>
+                </article>
+
+                <article class="metric-card">
+                    <p>P99 LATENCY</p>
+                    <h2 id="p99-latency">—</h2>
+                    <span>Microseconds</span>
+                </article>
+
+                <article class="metric-card">
+                    <p>MEAN LATENCY</p>
+                    <h2 id="mean-latency">—</h2>
+                    <span>Microseconds</span>
+                </article>
+
+                <article class="metric-card">
+                    <p>TRADES EXECUTED</p>
+                    <h2 id="trades-executed">—</h2>
+                    <span>Successful matches</span>
+                </article>
+
+                <article class="metric-card">
+                    <p>STEADY STATE</p>
+                    <h2 id="steady-time">—</h2>
+                    <span>Seconds</span>
+                </article>
+
+            </div>
+
+        </section>
+
+        <!-- 04: LATENCY DISTRIBUTION -->
+        <section class="details-section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">04 / DIAGNOSTICS</p>
+                    <h3>Latency Distribution</h3>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="detail-grid">
+
+                    <div class="detail-item">
+                        <span>P50</span>
+                        <strong id="p50-latency">—</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>P95</span>
+                        <strong id="p95-latency">—</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>P99</span>
+                        <strong id="detail-p99">—</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span>MAXIMUM</span>
+                        <strong id="max-latency">—</strong>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 05: PIPELINE TIMINGS -->
+        <section class="details-section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">05 / PIPELINE</p>
+                    <h3>Stage Timings</h3>
+                </div>
+            </div>
+
+            <div class="panel table-panel">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>COMPONENT</th>
+                            <th>TIME (SECONDS)</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="stage-timings">
+                        <tr>
+                            <td colspan="2" class="empty-row">
+                                No simulation results available
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- 06: EXECUTION INTEGRITY -->
+        <section class="details-section">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-label">06 / INTEGRITY</p>
+                    <h3>Execution Verification</h3>
+                </div>
+            </div>
+
+            <div class="panel integrity-panel">
+
+                <div class="integrity-item">
+                    <span>Generated</span>
+                    <strong id="integrity-generated">—</strong>
+                </div>
+
+                <div class="integrity-item">
+                    <span>Accepted</span>
+                    <strong id="integrity-accepted">—</strong>
+                </div>
+
+                <div class="integrity-item">
+                    <span>Published</span>
+                    <strong id="integrity-published">—</strong>
+                </div>
+
+                <div class="integrity-item">
+                    <span>Received</span>
+                    <strong id="integrity-received">—</strong>
+                </div>
+
+                <div class="integrity-item">
+                    <span>Unique IDs</span>
+                    <strong id="integrity-unique">—</strong>
+                </div>
+
+                <div class="integrity-item">
+                    <span>Duplicates</span>
+                    <strong id="integrity-duplicates">—</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ERROR DISPLAY -->
+        <div
+            id="error-message"
+            class="error-message hidden"
+            role="alert"
+        ></div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <span>CHRONOSMATCH</span>
+        <span>MARKET SIMULATION ENGINE</span>
+        <span>LOCAL ENVIRONMENT</span>
+    </footer>
+
+</div>
+
+<script src="/script.js"></script>
+</body>
+</html>

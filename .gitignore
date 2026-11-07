@@ -1,11 +1,19 @@
-__pycache__/
-*.pyc
-.pytest_cache/
-*.so
-*.c
-build/
-*.db
+# Python virtual environments
 .venv/
+venv/
+
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
+
+# Compiled Cython extensions
+*.pyd
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environment secrets
+.env
