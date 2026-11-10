@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChronosMatch — Trading Terminal</title>
+<style>
+:root{--bg:#080d16;--surface:#101827;--surface2:#151f30;--surface3:#1b2940;--line:#26354b;--text:#e8eef8;--muted:#8c9bb1;--green:#21c997;--red:#f05d72;--blue:#5b9cff;--purple:#9c83ff;--shadow:0 12px 35px #0005}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+body.light{--bg:#eef2f8;--surface:#fff;--surface2:#f5f7fb;--surface3:#e8eef7;--line:#d8e0ec;--text:#152238;--muted:#64748b;--shadow:0 12px 30px #20334d12}
+.topbar{height:62px;display:flex;align-items:center;gap:25px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:.2px;white-space:nowrap}.brand-mark{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(135deg,#5b9cff,#8c70f5);color:#fff}
+.nav{display:flex;align-items:center;gap:5px;flex:1}.nav button,.icon-btn{background:transparent;border:0;color:var(--muted);padding:9px 12px;border-radius:8px}.nav button.active,.nav button:hover{background:var(--surface3);color:var(--text)}
+.top-right{display:flex;align-items:center;gap:8px}.market-pill{font-size:10px;color:var(--green);background:#21c99716;border:1px solid #21c99744;padding:7px 10px;border-radius:20px}.primary,.secondary,.danger{border:0;border-radius:8px;padding:9px 13px;font-weight:700}.primary{background:var(--green);color:#05251b}.secondary{background:var(--surface3);border:1px solid var(--line)}.danger{background:var(--red);color:white}.icon-btn{font-size:17px;border:1px solid var(--line);padding:7px 10px}
+.ticker{height:34px;display:flex;align-items:center;gap:28px;overflow:auto;white-space:nowrap;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);font-size:11px}.ticker b{margin-left:6px}.up{color:var(--green)!important}.down{color:var(--red)!important}
+.layout{display:grid;grid-template-columns:245px minmax(400px,1fr) 290px;gap:12px;padding:14px;max-width:1800px;margin:auto}.left,.right,.main{min-width:0}.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}.card-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--line)}.card-head h3{margin:0;font-size:12px;letter-spacing:.4px}.muted{color:var(--muted)}.small{font-size:10px}.pad{padding:13px}.search{width:100%;padding:10px 11px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;color:var(--text);margin-bottom:10px}.watch-row{display:grid;grid-template-columns:1fr 62px;gap:8px;padding:11px 8px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:7px}.watch-row:hover,.watch-row.selected{background:var(--surface3)}.watch-row strong{font-size:11px}.watch-row small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.watch-price{text-align:right;font-variant-numeric:tabular-nums}.watch-price b{font-size:11px}.watch-price small{font-size:10px}.spark{width:60px;height:19px;grid-column:1/-1;margin-top:-5px}
+.watch-actions{display:flex;gap:7px;margin:12px 0}.watch-actions button{flex:1}.section-label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:1px;margin:4px 0 10px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}.stat{padding:13px;min-width:0}.stat label{display:block;color:var(--muted);font-size:10px;margin-bottom:8px}.stat strong{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}.stat small{display:block;color:var(--muted);font-size:10px;margin-top:6px}
+.chart-card{margin-bottom:10px}.instrument{display:flex;align-items:center;gap:10px}.symbol-icon{width:34px;height:34px;border-radius:10px;background:#5b9cff22;color:var(--blue);display:grid;place-items:center;font-weight:800}.instrument h2{font-size:15px;margin:0 0 3px}.instrument p{margin:0;color:var(--muted);font-size:10px}.price-line{display:flex;align-items:baseline;gap:10px;margin:14px 0 10px}.price-line strong{font-size:26px;font-variant-numeric:tabular-nums}.price-line span{font-size:11px}
+.chart-toolbar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.chart-toolbar button{background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:6px 9px;color:var(--muted);font-size:10px}.chart-toolbar button.active{background:#5b9cff22;border-color:var(--blue);color:var(--text)}.chart-meta{margin:10px 0;color:var(--muted);font-size:10px}.chart-wrap{height:265px;position:relative}.chart-wrap canvas{width:100%;height:100%;display:block}
+.tabs{display:flex;gap:17px;border-bottom:1px solid var(--line);padding:0 13px}.tabs button{background:none;border:0;padding:12px 2px;color:var(--muted);font-size:11px;border-bottom:2px solid transparent}.tabs button.active{color:var(--blue);border-color:var(--blue)}
+.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;white-space:nowrap}.data-table th{text-align:left;color:var(--muted);font-size:9px;letter-spacing:.6px;padding:11px 12px}.data-table td{padding:12px;border-top:1px solid var(--line);font-size:10px;font-variant-numeric:tabular-nums}.data-table tbody tr:hover{background:var(--surface2)}.empty{text-align:center;color:var(--muted);padding:24px!important}
+.ticket{padding:13px}.ticket-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.ticket-head h3{margin:0;font-size:12px}.segmented{display:grid;grid-template-columns:1fr 1fr;background:var(--surface2);padding:3px;border-radius:8px;gap:3px;margin-bottom:10px}.segmented button{border:0;background:transparent;padding:9px;border-radius:6px;color:var(--muted);font-size:11px}.segmented button.active.buy{background:var(--green);color:#06251c;font-weight:800}.segmented button.active.sell{background:var(--red);color:white;font-weight:800}
+.form-label{display:block;color:var(--muted);font-size:10px;margin:11px 0 6px}.field{width:100%;padding:10px;background:var(--surface2);border:1px solid var(--line);border-radius:7px;color:var(--text)}.two-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.order-info{display:flex;justify-content:space-between;padding:7px 0;color:var(--muted);font-size:10px}.order-info strong{color:var(--text)}.full{width:100%;margin:10px 0}.fineprint{font-size:9px;line-height:1.5;color:var(--muted)}
+.book{margin-top:10px}.book-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:5px 13px;font-size:10px;font-variant-numeric:tabular-nums}.book-row span:nth-child(2){text-align:center}.book-row span:last-child{text-align:right}.book-mid{display:flex;justify-content:space-between;padding:10px 13px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-weight:800}
+.page{display:none;grid-column:1/-1}.page.active{display:block}.page h1{font-size:21px;margin:4px 0 14px}.page-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.page-card{padding:15px}.page-card h3{margin:0 0 12px;font-size:13px}.inline-form{display:flex;gap:8px;flex-wrap:wrap}.inline-form .field{flex:1;min-width:120px}.notice{padding:10px;border-radius:8px;background:#5b9cff14;color:var(--muted);font-size:10px;margin-top:10px}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--surface3);border:1px solid var(--line);padding:13px 17px;border-radius:10px;box-shadow:var(--shadow);z-index:60;display:none;max-width:340px}.toast.show{display:block}.modal-backdrop{position:fixed;inset:0;background:#0009;z-index:50;display:none;align-items:center;justify-content:center;padding:15px}.modal-backdrop.show{display:flex}.modal{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}.modal h2{font-size:16px;margin:0 0 15px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.profile-menu{position:relative}.profile-menu .menu{display:none;position:absolute;right:0;top:42px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px;width:160px;z-index:30}.profile-menu .menu.show{display:block}.menu button{display:block;width:100%;text-align:left;padding:9px;border:0;background:none;color:var(--text);border-radius:6px}.menu button:hover{background:var(--surface3)}
+.footer{text-align:center;color:var(--muted);padding:20px;font-size:10px}
+.profile-hero{display:flex;align-items:center;gap:16px;padding:20px}.avatar{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#5b9cff,#8c70f5);font-size:23px;font-weight:900;color:white}.profile-details h2{margin:0 0 5px;font-size:18px}.profile-details p{margin:0;color:var(--muted);font-size:11px}.profile-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.profile-kpi{padding:15px}.profile-kpi span{display:block;color:var(--muted);font-size:10px}.profile-kpi strong{display:block;font-size:18px;margin-top:8px}.chat-panel{display:flex;flex-direction:column;min-height:480px}.chat-head{padding:14px;border-bottom:1px solid var(--line)}.chat-log{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1;max-height:460px;overflow:auto}.chat-msg{max-width:88%;padding:11px 13px;border-radius:10px;background:var(--surface3);font-size:12px;line-height:1.6;white-space:pre-wrap}.chat-msg.user{align-self:flex-end;background:#35568a;color:#fff}.chat-compose{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}.chat-compose input{flex:1;min-width:0}.quick-prompts{display:flex;gap:7px;flex-wrap:wrap;padding:0 14px 12px}.quick-prompts button{font-size:10px;padding:7px 9px}.profile-field{margin-bottom:12px}.profile-field label{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.auth-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 20% 15%,#18345d 0,#0a1220 42%,#070b13 100%)}
+.auth-card{width:min(410px,100%);padding:28px;background:#101827;border:1px solid #2a3c57;border-radius:16px;box-shadow:0 25px 80px #0009}
+.auth-brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:850;margin-bottom:8px}
+.auth-brand-mark{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(135deg,#5b9cff,#8c70f5);color:white}
+.auth-subtitle{color:#8c9bb1;font-size:12px;margin:0 0 22px}
+.auth-card h2{font-size:17px;margin:0 0 6px}
+.auth-card .auth-label{display:block;color:#aab8cb;font-size:11px;margin:13px 0 6px}
+.auth-card input{width:100%;padding:12px;background:#0b1321;border:1px solid #2a3c57;border-radius:8px;color:#e8eef8}
+.auth-submit{width:100%;margin-top:18px;padding:12px;border:0;border-radius:8px;background:#21c997;color:#05251b;font-weight:800}
+.auth-switch{margin-top:16px;text-align:center;color:#8c9bb1;font-size:12px}
+.auth-switch button{background:none;border:0;color:#78aaff;font-weight:700}
+.auth-error{min-height:16px;color:#f05d72;font-size:11px;margin-top:9px}
+.auth-note{font-size:10px;line-height:1.5;color:#7f90a8;margin-top:15px}
+.auth-hidden{display:none!important}
+body.auth-locked{overflow:hidden}
+body.auth-locked .topbar,body.auth-locked .ticker,body.auth-locked .layout,body.auth-locked #otherView,body.auth-locked .footer{filter:blur(3px);pointer-events:none;user-select:none}
+.logout-button{background:transparent;border:1px solid var(--line);border-radius:7px;padding:7px 10px;color:var(--muted)}
+@media(max-width:1150px){.layout{grid-template-columns:220px minmax(350px,1fr)}.right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.book{margin-top:0}.summary-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.topbar{padding:0 10px;gap:8px}.nav{overflow:auto}.nav button{padding:8px;font-size:10px}.market-pill{display:none}.layout{display:block;padding:8px}.left,.main,.right{margin-bottom:10px}.left{display:none}.right{display:block}.summary-grid{grid-template-columns:repeat(2,1fr)}.chart-wrap{height:220px}.page-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="auth-locked">
+
+<div class="auth-screen" id="authScreen">
+ <div class="auth-card">
+  <div class="auth-brand"><span class="auth-brand-mark">C</span> CHRONOSMATCH</div>
+  <p class="auth-subtitle">Professional simulated trading terminal</p>
+  <form id="loginForm">
+   <h2>Welcome back</h2>
+   <p class="auth-subtitle">Sign in to access your trading dashboard.</p>
+   <label class="auth-label" for="loginEmail">EMAIL ADDRESS</label>
+   <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="username" required>
+   <label class="auth-label" for="loginPassword">PASSWORD</label>
+   <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+   <button class="auth-submit" type="submit">Sign in</button>
+   <div class="auth-error" id="loginError"></div>
+   <div class="auth-switch">New to ChronosMatch? <button type="button" id="showRegister">Create account</button></div>
+  </form>
+  <form id="registerForm" class="auth-hidden">
+   <h2>Create your account</h2>
+   <p class="auth-subtitle">Register to use the demo trading terminal.</p>
+   <label class="auth-label" for="registerName">FULL NAME</label>
+   <input id="registerName" type="text" placeholder="Your name" autocomplete="name" required>
+   <label class="auth-label" for="registerEmail">EMAIL ADDRESS</label>
+   <input id="registerEmail" type="email" placeholder="you@example.com" autocomplete="email" required>
+   <label class="auth-label" for="registerPassword">PASSWORD</label>
+   <input id="registerPassword" type="password" placeholder="At least 8 characters" minlength="8" autocomplete="new-password" required>
+   <label class="auth-label" for="confirmPassword">CONFIRM PASSWORD</label>
+   <input id="confirmPassword" type="password" placeholder="Re-enter password" minlength="8" autocomplete="new-password" required>
+   <button class="auth-submit" type="submit">Create account</button>
+   <div class="auth-error" id="registerError"></div>
+   <div class="auth-switch">Already registered? <button type="button" id="showLogin">Back to sign in</button></div>
+  </form>
+  <p class="auth-note">Demo application only. Account details are stored in this browser for demonstration. Do not use a real or reused password.</p>
+ </div>
+</div>
+
+<header class="topbar">
+ <div class="brand"><span class="brand-mark">C</span> CHRONOSMATCH</div>
+ <nav class="nav" id="mainNav">
+  <button class="active" data-view="dashboard">Dashboard</button>
+  <button data-view="markets">Markets</button>
+  <button data-view="portfolio">Portfolio</button>
+  <button data-view="orders">Orders</button>
+  <button data-view="activity">Activity</button>
+  <button data-view="profile">Profile</button>
+  <button data-view="assistant">AI Assistant</button>
+ </nav>
+ <div class="top-right">
+  <span class="market-pill">● DEMO MARKET</span>
+  <button class="secondary" id="depositBtn">Add funds</button>
+  <button class="icon-btn" id="themeBtn" title="Toggle theme">☼</button>
+  <button class="logout-button" id="logoutBtn">Log out</button>
+  <div class="profile-menu"><button class="icon-btn" id="profileBtn">◉</button><div class="menu" id="profileMenu"><button data-action="profile">My profile</button><button data-action="settings">Settings</button><button data-action="help">Help & support</button></div></div>
+ </div>
+</header>
+<div class="ticker" id="ticker"></div>
+
+<div class="layout" id="dashboardView">
+ <aside class="left">
+  <div class="card pad">
+   <div class="card-head" style="padding:0 0 12px;border:0"><h3>WATCHLIST</h3><button class="icon-btn" id="addWatchBtn" title="Add symbol">＋</button></div>
+   <input class="search" id="watchSearch" placeholder="Search symbol or company">
+   <div id="watchlist"></div>
+   <div class="watch-actions"><button class="secondary" id="manageWatch">Manage</button><button class="secondary" id="refreshBtn">↻ Refresh</button></div>
+   <div class="section-label">MARKET STATUS</div>
+   <div class="order-info"><span>Exchange</span><strong>NSE · Demo</strong></div>
+   <div class="order-info"><span>Session</span><strong class="up">Open (simulated)</strong></div>
+   <div class="order-info"><span>Local time</span><strong id="clock">--:--:--</strong></div>
+  </div>
+ </aside>
+ <main class="main">
+  <section class="summary-grid">
+   <div class="card stat"><label>PORTFOLIO VALUE</label><strong id="portfolioValue">₹6,20,584</strong><small class="up">+2.84% overall</small></div>
+   <div class="card stat"><label>DAY'S P&L</label><strong class="down" id="dayPnl">−₹230.25</strong><small class="muted">−0.05% today</small></div>
+   <div class="card stat"><label>TOTAL P&L</label><strong class="up" id="totalPnl">+₹8,879</strong><small class="muted">Across positions</small></div>
+   <div class="card stat"><label>AVAILABLE CASH</label><strong id="cashValue">₹1,84,250</strong><small class="muted">Demo buying power</small></div>
+  </section>
+  <section class="card chart-card">
+   <div class="pad">
+    <div class="instrument"><div class="symbol-icon" id="symbolIcon">R</div><div><h2 id="instrumentName">Reliance Industries</h2><p id="instrumentMeta">RELIANCE · NSE · Equity</p></div><div style="margin-left:auto;text-align:right"><span class="muted small">Market price</span><div id="instrumentPrice" style="font-size:16px;font-weight:800">₹2,868.60</div></div></div>
+    <div class="price-line"><strong id="largePrice">₹2,868.60</strong><span id="largeChange" class="down">−0.91% today</span></div>
+    <div class="chart-toolbar" id="timeButtons"><button data-time="1D">1D</button><button data-time="1W">1W</button><button class="active" data-time="1M">1M</button><button data-time="3M">3M</button><button data-time="1Y">1Y</button><button data-time="ALL">ALL</button><span style="flex:1"></span><button id="indicatorBtn">Indicators ▾</button><button id="chartTypeBtn">Candles</button></div>
+    <div class="chart-meta" id="ohlc">O 2,870.00　H 2,878.00　L 2,860.00　C 2,868.60　Vol 1.2M</div>
+    <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+   </div>
+  </section>
+  <section class="card">
+   <div class="tabs" id="positionTabs"><button class="active" data-tab="positions">Positions</button><button data-tab="open">Open orders</button><button data-tab="history">Order history</button></div>
+   <div class="table-wrap"><table class="data-table"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table></div>
+  </section>
+ </main>
+ <aside class="right">
+  <section class="card ticket">
+   <div class="ticket-head"><h3>ORDER TICKET</h3><strong id="ticketSymbol">RELIANCE</strong></div>
+   <div class="segmented"><button class="active buy" id="buySide">BUY</button><button id="sellSide">SELL</button></div>
+   <div class="segmented"><button class="active" data-kind="MARKET">Market</button><button data-kind="LIMIT">Limit</button></div>
+   <label class="form-label">QUANTITY</label><input class="field" id="qty" type="number" min="1" step="1" value="10">
+   <div id="limitWrap" style="display:none"><label class="form-label">LIMIT PRICE (₹)</label><input class="field" id="limitPrice" type="number" min="0.01" step="0.01"></div>
+   <label class="form-label">ESTIMATED PRICE (₹)</label><input class="field" id="ticketPrice" readonly value="2,868.60">
+   <div class="order-info"><span>Order value</span><strong id="orderValue">₹28,686.00</strong></div>
+   <div class="order-info"><span>Estimated charges</span><strong id="charges">₹5.00</strong></div>
+   <div class="order-info"><span>Available cash</span><strong id="availableCash">₹1,84,250</strong></div>
+   <button class="primary full" id="placeOrder">BUY RELIANCE</button>
+   <p class="fineprint">Demo trading only. No real orders are sent to an exchange. Prices and balances are illustrative.</p>
+  </section>
+  <section class="card book">
+   <div class="card-head"><h3>MARKET DEPTH</h3><span class="muted small" id="depthSymbol">RELIANCE</span></div>
+   <div class="book-row muted"><span>QTY</span><span>BUY</span><span>SELL</span></div>
+   <div id="marketDepth"></div>
+   <div class="book-mid"><span id="depthLast">2,868.60</span><span class="muted small">Spread <b id="spread">0.10</b></span></div>
+   <div class="pad small muted">Bid/ask depth is generated demo data.</div>
+  </section>
+ </aside>
+</div>
+
+<section class="page" id="otherView" style="padding:18px;max-width:1500px;margin:auto">
+ <h1 id="pageTitle">Markets</h1>
+ <div id="pageContent"></div>
+</section>
+<div class="footer">CHRONOSMATCH TERMINAL · SIMULATED MARKET DATA · FOR EDUCATIONAL USE</div>
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal"><h2 id="modalTitle">Dialog</h2><div id="modalBody"></div><div class="modal-actions"><button class="secondary" id="modalCancel">Cancel</button><button class="primary" id="modalConfirm">Confirm</button></div></div></div>
+<script>
+  const $=id=>document.getElementById(id);
+
+/* CHRONOSMATCH DEMO AUTHENTICATION */
+const AUTH_USERS_KEY='chronosMatchUsers';
+const AUTH_SESSION_KEY='chronosMatchSession';
+let activeUser=null;
+
+function getAuthUsers(){
+ try{return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'[]')}
+ catch(error){return []}
+}
+function setAuthError(id,message){$(id).textContent=message}
+
+function enterApp(user){
+ activeUser=user;
+ localStorage.setItem(AUTH_SESSION_KEY,JSON.stringify({name:user.name,email:user.email}));
+ $('authScreen').classList.add('auth-hidden');
+ document.body.classList.remove('auth-locked');
+ toast('Welcome to ChronosMatch, '+user.name+'.');
+}
+
+function exitApp(){
+ activeUser=null;
+ localStorage.removeItem(AUTH_SESSION_KEY);
+ $('authScreen').classList.remove('auth-hidden');
+ document.body.classList.add('auth-locked');
+ $('loginForm').classList.remove('auth-hidden');
+ $('registerForm').classList.add('auth-hidden');
+ $('loginForm').reset();
+ setAuthError('loginError','');
+}
+
+$('showRegister').addEventListener('click',()=>{
+ $('loginForm').classList.add('auth-hidden');
+ $('registerForm').classList.remove('auth-hidden');
+ setAuthError('registerError','');
+});
+
+$('showLogin').addEventListener('click',()=>{
+ $('registerForm').classList.add('auth-hidden');
+ $('loginForm').classList.remove('auth-hidden');
+ setAuthError('loginError','');
+});
+
+$('registerForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const name=$('registerName').value.trim();
+ const email=$('registerEmail').value.trim().toLowerCase();
+ const password=$('registerPassword').value;
+ const confirm=$('confirmPassword').value;
+
+ if(password.length<8){
+  setAuthError('registerError','Password must contain at least 8 characters.');
+  return;
+ }
+ if(password!==confirm){
+  setAuthError('registerError','Passwords do not match.');
+  return;
+ }
+
+ const users=getAuthUsers();
+ if(users.some(user=>user.email===email)){
+  setAuthError('registerError','This email is already registered. Please sign in.');
+  return;
+ }
+
+ const user={name,email,password};
+ try{
+  users.push(user);
+  localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(users));
+  $('registerForm').reset();
+  $('registerForm').classList.add('auth-hidden');
+  $('loginForm').classList.remove('auth-hidden');
+  $('loginEmail').value=email;
+  setAuthError('loginError','Account created. Please sign in.');
+ }catch(error){
+  setAuthError('registerError','Could not save account in this browser.');
+ }
+});
+
+$('loginForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const email=$('loginEmail').value.trim().toLowerCase();
+ const password=$('loginPassword').value;
+ const user=getAuthUsers().find(item=>item.email===email&&item.password===password);
+
+ if(!user){
+  setAuthError('loginError','Incorrect email or password. Create an account if you are new.');
+  return;
+ }
+ enterApp(user);
+});
+
+$('logoutBtn').addEventListener('click',exitApp);
+
+try{
+ const session=JSON.parse(localStorage.getItem(AUTH_SESSION_KEY)||'null');
+ if(session&&session.email){
+  const user=getAuthUsers().find(item=>item.email===session.email);
+  if(user)enterApp(user);
+ }
+}catch(error){
+ localStorage.removeItem(AUTH_SESSION_KEY);
+}
+
+/* STOCK DATA */
+const money=n=>'₹'+Number(n).toLocaleString('en-IN',{
+ minimumFractionDigits:2,
+ maximumFractionDigits:2
+});
+
+const stocks=[
+ {symbol:'RELIANCE',name:'Reliance Industries',price:2868.60,change:-0.91},
+ {symbol:'TCS',name:'Tata Consultancy Services',price:3981.55,change:0.83},
+ {symbol:'HDFCBANK',name:'HDFC Bank',price:1725.05,change:-0.52},
+ {symbol:'INFY',name:'Infosys',price:1847.25,change:1.19},
+ {symbol:'ICICIBANK',name:'ICICI Bank',price:1267.85,change:0.35},
+ {symbol:'SBIN',name:'State Bank of India',price:812.35,change:0.38},
+ {symbol:'ITC',name:'ITC Limited',price:468.55,change:0.82},
+ {symbol:'TATAMOTORS',name:'Tata Motors',price:746.00,change:-1.16},
+ {symbol:'BHARTIARTL',name:'Bharti Airtel',price:1745.20,change:0.67},
+ {symbol:'LT',name:'Larsen & Toubro',price:3520.40,change:-0.24},
+ {symbol:'WIPRO',name:'Wipro',price:287.30,change:1.03},
+ {symbol:'AXISBANK',name:'Axis Bank',price:1120.50,change:-0.31}
+];
+
+let selected=stocks[0];
+let side='BUY';
+let kind='MARKET';
+let cash=Number(localStorage.getItem('chronosMatchCash')||184250);
+let tab='positions';
+let chartType='candles';
+let watch=stocks.slice(0,8);
+let orders=[];
+let trades=[];
+let realizedPnl=Number(localStorage.getItem('chronosMatchRealizedPnl')||0);
+
+let holdings=[
+ {symbol:'RELIANCE',qty:40,avg:2790.50},
+ {symbol:'TCS',qty:15,avg:3855},
+ {symbol:'HDFCBANK',qty:60,avg:1690},
+ {symbol:'INFY',qty:35,avg:1890},
+ {symbol:'ITC',qty:200,avg:452.30}
+];
+
+/* NOTIFICATIONS */
+function toast(msg){
+ $('toast').textContent=msg;
+ $('toast').classList.add('show');
+ clearTimeout(toast.timer);
+ toast.timer=setTimeout(()=>$('toast').classList.remove('show'),3000);
+}
+
+function fmt(n){
+ return Number(n).toLocaleString('en-IN',{
+  minimumFractionDigits:2,
+  maximumFractionDigits:2
+ });
+}
+
+/* MARKET TICKER */
+function renderTicker(){
+ $('ticker').innerHTML=stocks.slice(0,6).map(s=>`
+  <span>${s.symbol}
+   <b>${fmt(s.price)}</b>
+   <b class="${s.change>=0?'up':'down'}">
+    ${s.change>0?'+':''}${s.change}%
+   </b>
+  </span>
+ `).join('');
+}
+
+/* WATCHLIST */
+function renderWatchlist(filter=''){
+ $('watchlist').innerHTML='';
+ watch.filter(s=>(s.symbol+' '+s.name).toLowerCase().includes(filter.toLowerCase()))
+ .forEach(s=>{
+  const el=document.createElement('div');
+  el.className='watch-row'+(s.symbol===selected.symbol?' selected':'');
+  el.innerHTML=`
+   <div>
+    <strong>${s.symbol}</strong>
+    <small>${s.name}</small>
+   </div>
+   <div class="watch-price">
+    <b>${fmt(s.price)}</b>
+    <small class="${s.change>=0?'up':'down'}">
+     ${s.change>0?'+':''}${s.change}%
+    </small>
+   </div>
+  `;
+  el.onclick=()=>selectStock(s);
+  $('watchlist').appendChild(el);
+ });
+}
+
+/* SELECT STOCK */
+function selectStock(s){
+ selected=s;
+ $('instrumentName').textContent=s.name;
+ $('instrumentMeta').textContent=s.symbol+' · NSE · Equity';
+ $('symbolIcon').textContent=s.symbol[0];
+ $('instrumentPrice').textContent=money(s.price);
+ $('largePrice').textContent=money(s.price);
+ $('largeChange').textContent=(s.change>0?'+':'')+s.change+'% today';
+ $('largeChange').className=s.change>=0?'up':'down';
+ $('ticketSymbol').textContent=s.symbol;
+ $('depthSymbol').textContent=s.symbol;
+ $('ticketPrice').value=fmt(s.price);
+ $('limitPrice').value=s.price.toFixed(2);
+ $('depthLast').textContent=fmt(s.price);
+ $('spread').textContent='0.10';
+ $('placeOrder').textContent=side+' '+s.symbol;
+ renderWatchlist($('watchSearch').value);
+ renderDepth();
+ updateOrderValue();
+ drawChart();
+}
+
+/* MARKET DEPTH */
+function renderDepth(){
+ let html='';
+ for(let i=5;i>=1;i--){
+  html+=`
+   <div class="book-row down">
+    <span>${(Math.random()*900+100).toFixed(0)}</span>
+    <span>—</span>
+    <span>${fmt(selected.price+i*.1)}</span>
+   </div>
+  `;
+ }
+ for(let i=1;i<=5;i++){
+  html+=`
+   <div class="book-row up">
+    <span>${(Math.random()*900+100).toFixed(0)}</span>
+    <span>${fmt(selected.price-i*.1)}</span>
+    <span>—</span>
+   </div>
+  `;
+ }
+ $('marketDepth').innerHTML=html;
+}
+
+/* ORDER CALCULATIONS */
+function updateOrderValue(){
+ const q=Number($('qty').value)||0;
+ const p=kind==='LIMIT'?Number($('limitPrice').value)||0:selected.price;
+ $('orderValue').textContent=money(q*p);
+ $('charges').textContent=money(Math.max(5,q*p*.0003));
+ $('ticketPrice').value=fmt(p);
+}
+
+/* BUY / SELL */
+function setSide(s){
+ side=s;
+ $('buySide').classList.toggle('active',s==='BUY');
+ $('buySide').classList.toggle('buy',s==='BUY');
+ $('sellSide').classList.toggle('active',s==='SELL');
+ $('sellSide').classList.toggle('sell',s==='SELL');
+ $('placeOrder').className=s==='BUY'?'primary full':'danger full';
+ $('placeOrder').textContent=s+' '+selected.symbol;
+}
+
+$('buySide').onclick=()=>setSide('BUY');
+$('sellSide').onclick=()=>setSide('SELL');
+
+/* MARKET / LIMIT */
+document.querySelectorAll('[data-kind]').forEach(b=>{
+ b.onclick=()=>{
+  kind=b.dataset.kind;
+  document.querySelectorAll('[data-kind]').forEach(x=>{
+   x.classList.toggle('active',x===b);
+  });
+  $('limitWrap').style.display=kind==='LIMIT'?'block':'none';
+  updateOrderValue();
+ };
+});
+
+$('qty').addEventListener('input',updateOrderValue);
+$('limitPrice').addEventListener('input',updateOrderValue);
+
+/* PLACE DEMO ORDER */
+function placeOrder(){
+ const qty=Number($('qty').value);
+ const price=kind==='LIMIT'?Number($('limitPrice').value):selected.price;
+
+ if(!Number.isInteger(qty)||qty<1){
+  toast('Enter a valid whole-number quantity.');
+  return;
+ }
+ if(!Number.isFinite(price)||price<=0){
+  toast('Enter a valid price.');
+  return;
+ }
+
+ const value=qty*price;
+ const fee=Math.max(5,value*.0003);
+
+ if(side==='BUY'&&value+fee>cash){
+  toast('Insufficient demo cash balance.');
+  return;
+ }
+
+ if(side==='SELL'){
+  const h=holdings.find(x=>x.symbol===selected.symbol);
+  if(!h||h.qty<qty){
+   toast('Not enough shares in your demo portfolio.');
+   return;
+  }
+ }
+
+ if(side==='BUY'){
+  cash-=value+fee;
+  let h=holdings.find(x=>x.symbol===selected.symbol);
+  if(h){
+   h.avg=(h.avg*h.qty+price*qty)/(h.qty+qty);
+   h.qty+=qty;
+  }else{
+   holdings.push({symbol:selected.symbol,qty,avg:price});
+  }
+ }else{
+  const h=holdings.find(x=>x.symbol===selected.symbol);
+  realizedPnl+=(price-h.avg)*qty-fee;
+  cash+=value-fee;
+  h.qty-=qty;
+  holdings=holdings.filter(x=>x.qty>0);
+  localStorage.setItem('chronosMatchRealizedPnl',String(realizedPnl));
+ }
+
+ const order={
+  id:'MD'+Date.now().toString().slice(-7),
+  symbol:selected.symbol,
+  side,
+  kind,
+  qty,
+  price,
+  value,
+  status:'COMPLETED',
+  time:new Date().toLocaleTimeString()
+ };
+
+ orders.unshift(order);
+ if(kind==='MARKET')trades.unshift(order);
+ localStorage.setItem('chronosMatchCash',String(cash));
+
+ $('cashValue').textContent=money(cash);
+ $('availableCash').textContent=money(cash);
+ const metrics=getPortfolioMetrics();
+ $('totalPnl').textContent=(metrics.totalPnl>=0?'+':'')+money(metrics.totalPnl);
+ $('totalPnl').className=metrics.totalPnl>=0?'up':'down';
+
+ renderPositions();
+ updateOrderValue();
+ toast(`${side} ${qty} ${selected.symbol} demo order completed.`);
+}
+
+$('placeOrder').onclick=placeOrder;
+/* POSITIONS AND ORDER HISTORY */
+function renderPositions(){
+ let head='';
+ let body='';
+
+ if(tab==='positions'){
+  head=`
+   <tr>
+    <th>SYMBOL</th><th>QTY</th><th>AVG PRICE</th>
+    <th>LTP</th><th>VALUE</th><th>P&L</th>
+   </tr>
+  `;
+
+  body=holdings.map(h=>{
+   let s=stocks.find(x=>x.symbol===h.symbol)||selected;
+   let pnl=(s.price-h.avg)*h.qty;
+   return `
+    <tr>
+     <td><b>${h.symbol}</b></td>
+     <td>${h.qty}</td>
+     <td>${fmt(h.avg)}</td>
+     <td>${fmt(s.price)}</td>
+     <td>${money(h.qty*s.price)}</td>
+     <td class="${pnl>=0?'up':'down'}">
+      ${pnl>=0?'+':''}${fmt(pnl)}
+     </td>
+    </tr>
+   `;
+  }).join('')||'<tr><td colspan="6" class="empty">No holdings yet.</td></tr>';
+ }
+
+ if(tab==='open'||tab==='history'){
+  head=`
+   <tr>
+    <th>ORDER ID</th><th>SYMBOL</th><th>SIDE</th>
+    <th>TYPE</th><th>QTY</th><th>PRICE</th><th>TIME</th>
+   </tr>
+  `;
+
+  let rows=tab==='open'
+   ?orders.filter(o=>o.status==='PENDING')
+   :orders;
+
+  body=rows.map(o=>`
+   <tr>
+    <td>${o.id}</td>
+    <td>${o.symbol}</td>
+    <td class="${o.side==='BUY'?'up':'down'}">${o.side}</td>
+    <td>${o.kind}</td>
+    <td>${o.qty}</td>
+    <td>${fmt(o.price)}</td>
+    <td>${o.time}</td>
+   </tr>
+  `).join('')||
+  `<tr><td colspan="7" class="empty">No ${tab==='open'?'open':'historical'} orders.</td></tr>`;
+ }
+
+ $('tableHead').innerHTML=head;
+ $('tableBody').innerHTML=body;
+}
+
+function switchTab(t){
+ tab=t;
+ document.querySelectorAll('#positionTabs button').forEach(b=>{
+  b.classList.toggle('active',b.dataset.tab===t);
+ });
+ renderPositions();
+}
+
+$('positionTabs').addEventListener('click',e=>{
+ let b=e.target.closest('[data-tab]');
+ if(b)switchTab(b.dataset.tab);
+});
+
+/* CHART */
+function drawChart(){
+ const c=$('priceChart');
+ const r=c.getBoundingClientRect();
+ if(!r.width)return;
+
+ const dpr=devicePixelRatio||1;
+ c.width=r.width*dpr;
+ c.height=r.height*dpr;
+
+ const x=c.getContext('2d');
+ x.scale(dpr,dpr);
+
+ const w=r.width;
+ const h=r.height;
+ x.clearRect(0,0,w,h);
+
+ const cs=[];
+ let p=selected.price*.96;
+
+ for(let i=0;i<65;i++){
+  let o=p;
+  let cl=o+(Math.random()-.48)*selected.price*.009;
+  let hi=Math.max(o,cl)+Math.random()*selected.price*.003;
+  let lo=Math.min(o,cl)-Math.random()*selected.price*.003;
+  cs.push({o,cl,hi,lo,v:Math.random()});
+  p=cl;
+ }
+
+ const min=Math.min(...cs.map(a=>a.lo));
+ const max=Math.max(...cs.map(a=>a.hi));
+ const top=12;
+ const chartH=h*.72;
+ const gap=w/cs.length;
+ const cw=Math.max(2,gap*.55);
+
+ x.strokeStyle=getComputedStyle(document.body).getPropertyValue('--line');
+ x.lineWidth=.7;
+
+ for(let j=0;j<5;j++){
+  let y=top+j*chartH/4;
+  x.beginPath();
+  x.moveTo(0,y);
+  x.lineTo(w,y);
+  x.stroke();
+ }
+
+ cs.forEach((a,i)=>{
+  let xx=i*gap+gap/2;
+  let yo=top+(max-a.o)/(max-min)*chartH;
+  let yc=top+(max-a.cl)/(max-min)*chartH;
+  let yh=top+(max-a.hi)/(max-min)*chartH;
+  let yl=top+(max-a.lo)/(max-min)*chartH;
+  let col=a.cl>=a.o?'#21c997':'#f05d72';
+
+  x.strokeStyle=col;
+  x.fillStyle=col;
+  x.beginPath();
+  x.moveTo(xx,yh);
+  x.lineTo(xx,yl);
+  x.stroke();
+
+  if(chartType==='candles'){
+   x.fillRect(xx-cw/2,Math.min(yo,yc),cw,Math.max(2,Math.abs(yc-yo)));
+  }else{
+   x.beginPath();
+   x.arc(xx,yc,1.5,0,Math.PI*2);
+   x.fill();
+  }
+ });
+
+ const vTop=chartH+18;
+ const vh=h-vTop-3;
+ cs.forEach((a,i)=>{
+  x.fillStyle=a.cl>=a.o?'#21c99755':'#f05d7255';
+  x.fillRect(i*gap+gap/2-cw/2,h-a.v*vh,cw,a.v*vh);
+ });
+}
+
+/* NAVIGATION */
+function showView(view){
+ if(view==='dashboard'){
+  $('dashboardView').style.display='grid';
+  $('otherView').classList.remove('active');
+ }else{
+  $('dashboardView').style.display='none';
+  $('otherView').classList.add('active');
+  renderPage(view);
+ }
+
+ document.querySelectorAll('#mainNav button').forEach(b=>{
+  b.classList.toggle('active',b.dataset.view===view);
+ });
+}
+
+function renderPage(view){
+ const titles={
+  markets:'Markets',
+  portfolio:'Portfolio',
+  orders:'Orders',
+  activity:'Activity',
+  profile:'My Profile',
+  assistant:'ChronosMatch AI Assistant'
+ };
+
+ $('pageTitle').textContent=titles[view]||view;
+ let content='';
+
+ if(view==='markets'){
+  content=`
+   <div class="card">
+    <div class="card-head">
+     <h3>MARKET UNIVERSE</h3>
+     <input class="search" id="marketSearch" placeholder="Search market" style="max-width:260px;margin:0">
+    </div>
+    <div class="table-wrap">
+     <table class="data-table">
+      <thead>
+       <tr><th>SYMBOL</th><th>COMPANY</th><th>LAST PRICE</th><th>CHANGE</th><th>ACTION</th></tr>
+      </thead>
+      <tbody>
+       ${stocks.map(s=>`
+        <tr>
+         <td>${s.symbol}</td>
+         <td>${s.name}</td>
+         <td>${money(s.price)}</td>
+         <td class="${s.change>=0?'up':'down'}">${s.change}%</td>
+         <td>
+          <button class="secondary" onclick="selectStockBySymbol('${s.symbol}')">View</button>
+          <button class="primary" onclick="quickBuy('${s.symbol}')">Buy</button>
+         </td>
+        </tr>
+       `).join('')}
+      </tbody>
+     </table>
+    </div>
+   </div>
+  `;
+ }
+
+ if(view==='portfolio'){
+  content=`
+   <div class="summary-grid">
+    <div class="card stat"><label>AVAILABLE CASH</label><strong>${money(cash)}</strong></div>
+    <div class="card stat"><label>POSITIONS</label><strong>${holdings.length}</strong></div>
+    <div class="card stat"><label>INVESTED VALUE</label><strong>${money(holdings.reduce((a,h)=>a+h.qty*h.avg,0))}</strong></div>
+    <div class="card stat"><label>DEMO ACCOUNT</label><strong>ACTIVE</strong></div>
+   </div>
+   <div class="card">
+    <div class="card-head"><h3>YOUR HOLDINGS</h3></div>
+    <div class="table-wrap">
+     <table class="data-table">
+      <thead><tr><th>SYMBOL</th><th>QTY</th><th>AVERAGE</th><th>LTP</th><th>MARKET VALUE</th></tr></thead>
+      <tbody>
+       ${holdings.map(h=>{
+        let s=stocks.find(x=>x.symbol===h.symbol)||selected;
+        return `<tr><td>${h.symbol}</td><td>${h.qty}</td><td>${money(h.avg)}</td><td>${money(s.price)}</td><td>${money(h.qty*s.price)}</td></tr>`;
+       }).join('')||'<tr><td colspan="5" class="empty">No holdings</td></tr>'}
+      </tbody>
+     </table>
+    </div>
+   </div>
+  `;
+ }
+
+ if(view==='orders'){
+  content=`
+   <div class="card">
+    <div class="card-head"><h3>ALL ORDERS</h3></div>
+    <div class="table-wrap">
+     <table class="data-table">
+      <thead><tr><th>ORDER ID</th><th>SYMBOL</th><th>SIDE</th><th>TYPE</th><th>QTY</th><th>PRICE</th><th>TIME</th></tr></thead>
+      <tbody>
+       ${orders.map(o=>`
+        <tr>
+         <td>${o.id}</td><td>${o.symbol}</td>
+         <td class="${o.side==='BUY'?'up':'down'}">${o.side}</td>
+         <td>${o.kind}</td><td>${o.qty}</td>
+         <td>${money(o.price)}</td><td>${o.time}</td>
+        </tr>
+       `).join('')||'<tr><td colspan="7" class="empty">No orders yet. Use the order ticket to place a demo trade.</td></tr>'}
+      </tbody>
+     </table>
+    </div>
+   </div>
+  `;
+ }
+
+ if(view==='activity'){
+  content=`
+   <div class="page-grid">
+    <div class="card page-card">
+     <h3>RECENT ACTIVITY</h3>
+     ${orders.slice(0,10).map(o=>`
+      <div class="order-info"><span>${o.side} ${o.symbol} · ${o.qty} shares</span><strong>${o.time}</strong></div>
+     `).join('')||'<p class="muted">No activity yet.</p>'}
+    </div>
+    <div class="card page-card">
+     <h3>ACCOUNT TOOLS</h3>
+     <p class="muted">Manage your simulated account and preferences.</p>
+     <br>
+     <button class="secondary" onclick="openDeposit()">Add demo funds</button>
+     <button class="secondary" onclick="downloadStatement()">Export statement CSV</button>
+     <p class="notice">All account activity stays in this browser session.</p>
+    </div>
+   </div>
+  `;
+ }
+
+ if(view==='profile'){
+  const user=activeUser||{name:'Demo User',email:'Not signed in'};
+  const initials=(user.name||'U').trim().split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase();
+  const portfolio=holdings.reduce((sum,h)=>{
+   const s=stocks.find(x=>x.symbol===h.symbol)||selected;
+   return sum+h.qty*s.price;
+  },0);
+
+  content=`
+   <div class="card profile-hero">
+    <div class="avatar">${initials}</div>
+    <div class="profile-details">
+     <h2>${escapeHTML(user.name||'Demo User')}</h2>
+     <p>${escapeHTML(user.email||'')}</p>
+     <p style="margin-top:7px;color:var(--green)">● Demo account active</p>
+    </div>
+    <div style="margin-left:auto"><button class="secondary" onclick="editProfile()">Edit profile</button></div>
+   </div>
+
+   <div class="profile-kpis">
+    <div class="card profile-kpi"><span>AVAILABLE DEMO CASH</span><strong>${money(cash)}</strong></div>
+    <div class="card profile-kpi"><span>HOLDINGS</span><strong>${holdings.length}</strong></div>
+    <div class="card profile-kpi"><span>ORDERS PLACED</span><strong>${orders.length}</strong></div>
+   </div>
+
+   <div class="page-grid">
+    <div class="card page-card">
+     <h3>PORTFOLIO RISK & PROFIT</h3>
+     <p class="muted">Current simulated portfolio performance and concentration risk.</p>
+     <div class="order-info"><span>Invested amount</span><strong id="riskInvested">₹0.00</strong></div>
+     <div class="order-info"><span>Current market value</span><strong id="riskMarketValue">₹0.00</strong></div>
+     <div class="order-info"><span>Unrealized profit / loss</span><strong id="riskUnrealized">₹0.00</strong></div>
+     <div class="order-info"><span>Realized profit / loss</span><strong id="riskRealized">₹0.00</strong></div>
+     <div class="order-info"><span>Total profit / loss</span><strong id="riskTotal">₹0.00</strong></div>
+     <div class="order-info"><span>Return</span><strong id="riskReturn">0.00%</strong></div>
+     <div class="order-info"><span>Largest holding</span><strong id="riskConcentration">0.00%</strong></div>
+     <div class="order-info"><span>Risk level</span><strong id="riskLevel">Not calculated</strong></div>
+     <button class="primary" type="button" id="calculateRiskBtn">Calculate risk & profit</button>
+     <p class="notice">Educational estimate based on portfolio concentration, not investment advice.</p>
+    </div>
+
+    <div class="card page-card">
+     <h3>PROJECT ROLE & TECHNOLOGY</h3>
+     <p class="muted">ChronosMatch is an educational order-matching and market-monitoring project.</p>
+     <div class="order-info"><span>Backend</span><strong>Python · FastAPI</strong></div>
+     <div class="order-info"><span>Matching</span><strong>Matching Engine</strong></div>
+     <div class="order-info"><span>Frontend</span><strong>HTML · CSS · JavaScript</strong></div>
+     <div class="order-info"><span>Monitoring</span><strong>Metrics & Dashboard</strong></div>
+    </div>
+   </div>
+  `;
+ }
+
+ if(view==='assistant'){
+  content=`
+   <div class="card chat-panel">
+    <div class="chat-head">
+     <h3 style="margin:0 0 5px">CHRONOSMATCH PROJECT ASSISTANT</h3>
+     <span class="muted small">Offline project knowledge assistant · built-in project guide</span>
+    </div>
+    <div class="chat-log" id="chatLog">
+     <div class="chat-msg">Hello! I am the ChronosMatch project assistant. Ask me about the architecture, matching engine, order flow, metrics, API, technology stack, testing, or your Monitoring & Integration role.</div>
+    </div>
+    <div class="quick-prompts">
+     <button class="secondary" onclick="askQuick('Explain the project architecture')">Architecture</button>
+     <button class="secondary" onclick="askQuick('What is an order?')">What is an order?</button>
+     <button class="secondary" onclick="askQuick('Explain mmap and shared memory')">mmap</button>
+     <button class="secondary" onclick="askQuick('What metrics do we monitor?')">Metrics</button>
+     <button class="secondary" onclick="askQuick('Explain my role')">My role</button>
+    </div>
+    <form class="chat-compose" id="chatForm">
+     <input class="field" id="chatInput" placeholder="Ask about ChronosMatch..." autocomplete="off">
+     <button class="primary" type="submit">Send</button>
+    </form>
+   </div>
+  `;
+ }
+
+ $('pageContent').innerHTML=content;
+ if(view==='profile'){
+  updateRiskPanel();
+  const riskButton=$('calculateRiskBtn');
+  if(riskButton)riskButton.addEventListener('click',showRisk);
+ }
+}
+/* PORTFOLIO RISK & PROFIT */
+function getPortfolioMetrics(){
+ const invested=holdings.reduce((sum,h)=>sum+h.qty*h.avg,0);
+
+ const marketValue=holdings.reduce((sum,h)=>{
+  const stock=stocks.find(s=>s.symbol===h.symbol);
+  return sum+h.qty*(stock?stock.price:h.avg);
+ },0);
+
+ const unrealized=marketValue-invested;
+ const totalPnl=realizedPnl+unrealized;
+ const returnPct=invested>0?(totalPnl/invested)*100:0;
+
+ const largestValue=holdings.reduce((largest,h)=>{
+  const stock=stocks.find(s=>s.symbol===h.symbol);
+  return Math.max(largest,h.qty*(stock?stock.price:h.avg));
+ },0);
+
+ const concentration=marketValue>0?(largestValue/marketValue)*100:0;
+
+ const riskLevel=holdings.length===0?'No holdings':
+  concentration>=60?'High':concentration>=35?'Medium':'Low';
+
+ return {
+  invested,marketValue,unrealized,realized:realizedPnl,
+  totalPnl,returnPct,concentration,riskLevel
+ };
+}
+
+function showRisk(){
+ const m=getPortfolioMetrics();
+ const cls=n=>n>=0?'up':'down';
+
+ openModal('Portfolio risk & profit',`
+  <div class="order-info"><span>Invested amount</span><strong>${money(m.invested)}</strong></div>
+  <div class="order-info"><span>Current market value</span><strong>${money(m.marketValue)}</strong></div>
+  <div class="order-info"><span>Unrealized P/L</span><strong class="${cls(m.unrealized)}">${money(m.unrealized)}</strong></div>
+  <div class="order-info"><span>Realized P/L</span><strong class="${cls(m.realized)}">${money(m.realized)}</strong></div>
+  <div class="order-info"><span>Total P/L</span><strong class="${cls(m.totalPnl)}">${money(m.totalPnl)}</strong></div>
+  <div class="order-info"><span>Return</span><strong class="${cls(m.returnPct)}">${m.returnPct.toFixed(2)}%</strong></div>
+  <div class="order-info"><span>Largest holding concentration</span><strong>${m.concentration.toFixed(2)}%</strong></div>
+  <div class="order-info"><span>Concentration risk</span><strong>${m.riskLevel}</strong></div>
+  <p class="notice">This simple demo indicator measures concentration only. It is not a volatility, VaR, or prediction model.</p>
+ `,'Close');
+}
+
+function updateRiskPanel(){
+ const m=getPortfolioMetrics();
+
+ const values={
+  riskInvested:money(m.invested),
+  riskMarketValue:money(m.marketValue),
+  riskUnrealized:money(m.unrealized),
+  riskRealized:money(m.realized),
+  riskTotal:money(m.totalPnl),
+  riskReturn:m.returnPct.toFixed(2)+'%',
+  riskConcentration:m.concentration.toFixed(2)+'%',
+  riskLevel:m.riskLevel
+ };
+
+ Object.entries(values).forEach(([id,value])=>{
+  const el=$(id);
+  if(el)el.textContent=value;
+ });
+
+ ['riskUnrealized','riskRealized','riskTotal','riskReturn'].forEach(id=>{
+  const el=$(id);
+  if(!el)return;
+
+  const n=id==='riskUnrealized'?m.unrealized:
+   id==='riskRealized'?m.realized:
+   id==='riskTotal'?m.totalPnl:m.returnPct;
+
+  el.className=n>=0?'up':'down';
+ });
+}
+
+/* PROFILE EDITING */
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,ch=>({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;',
+  "'":'&#39;'
+ }[ch]));
+}
+
+function editProfile(){
+ const user=activeUser||{name:'Demo User',email:''};
+
+ openModal(
+  'Edit profile',
+  `
+   <div class="profile-field">
+    <label>FULL NAME</label>
+    <input class="field" id="editName" value="${escapeHTML(user.name||'')}">
+   </div>
+   <div class="profile-field">
+    <label>EMAIL ADDRESS</label>
+    <input class="field" id="editEmail" type="email" value="${escapeHTML(user.email||'')}">
+   </div>
+  `,
+  'Save changes',
+  ()=>{
+   const name=$('editName').value.trim();
+   const email=$('editEmail').value.trim().toLowerCase();
+
+   if(!name||!email){
+    toast('Enter both name and email.');
+    return false;
+   }
+
+   const users=getAuthUsers();
+   const duplicate=users.some(u=>u.email===email&&u.email!==user.email);
+
+   if(duplicate){
+    toast('That email is already registered.');
+    return false;
+   }
+
+   const index=users.findIndex(u=>u.email===user.email);
+
+   if(index>=0){
+    users[index].name=name;
+    users[index].email=email;
+    localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(users));
+    activeUser=users[index];
+    localStorage.setItem(AUTH_SESSION_KEY,JSON.stringify({name,email}));
+    toast('Profile updated.');
+   }else{
+    activeUser={name,email};
+    toast('Profile updated for this session.');
+   }
+
+   renderPage('profile');
+  }
+ );
+}
+
+/* CHRONOSMATCH PROJECT AI KNOWLEDGE */
+const projectKnowledge=[
+ {
+  keys:['architecture','flow','workflow','pipeline'],
+  answer:'ChronosMatch architecture: Order Generator → Binary Encoder → Shared Ring Buffer → Matching Engine → Trade Ledger → Monitoring Dashboard. The producer creates orders, encodes them, places them in shared memory, and the engine processes them. Monitoring components show throughput, latency, counts and errors.'
+ },
+ {
+  keys:['order','buy','sell','fields'],
+  answer:'An order is a request to buy or sell an instrument. In the engine contract, an Order contains order_id, sequence, side, price, quantity and optional timestamp_ns. Quantity must be greater than zero. Price is an integer number of paise/ticks, not a float. Import BUY and SELL from engine/models.py; do not hardcode 0 and 1.'
+ },
+ {
+  keys:['matching engine','engine','match'],
+  answer:'The MatchingEngine receives orders and matches compatible BUY and SELL orders according to the project engine rules. The documented interface includes submit(order_id, side, price, quantity, sequence) and submit_order(order). It tracks orders_processed and trades_executed.'
+ },
+ {
+  keys:['mmap','memory','shared memory','ring buffer'],
+  answer:'mmap means memory-mapped file. It maps a file or shared-memory region into a process address space. With a shared mapping, multiple processes can access the same mapped memory region, which can be used for communication. In ChronosMatch, the shared ring buffer is the hand-off area between the producer and consumer/engine.'
+ },
+ {
+  keys:['metrics','monitor','monitoring','dashboard'],
+  answer:'ChronosMatch monitoring metrics include orders generated, orders received/processed, trades completed, errors, processing latency and throughput (orders per second). The dashboard helps a reviewer see whether the pipeline is processing orders correctly and efficiently.'
+ },
+ {
+  keys:['latency','throughput','performance'],
+  answer:'Latency is the time taken to process an order or operation. Throughput is the number of orders processed per second. Lower latency and higher throughput are generally desirable, while errors and unprocessed orders should be monitored.'
+ },
+ {
+  keys:['api','fastapi','endpoint','route'],
+  answer:'The current FastAPI backend exposes GET /, GET /health and POST /api/v1/simulator/start. The simulator request accepts total_orders from 1 to 10,000 and returns generated/received/processed counts, trades, errors, processing time, average latency, throughput and order-book data.'
+ },
+ {
+  keys:['role','my work','member','integration'],
+  answer:'Your Monitoring and Integration role focuses on connecting project components and making system behaviour visible. Relevant areas include main.py, metrics.py, benchmark.py, dashboard.py, database.py, tests, requirements.txt and README.md, subject to your team’s latest file assignment. Explain how you track order counts, trades, errors, latency and throughput.'
+ },
+ {
+  keys:['rules','branch','git','team'],
+  answer:'Team rules: work only on your own branch; never push to main; edit only assigned files; follow engine-interface docs; import BUY and SELL from engine/models.py; use integer paise prices; and assign sequence numbers only once in the producer.'
+ },
+ {
+  keys:['test','pytest','testing'],
+  answer:'Run tests from the project root with: python -m pytest -q. A previous project checkpoint reported 58 passed, but rerun tests after your latest changes to verify the current code.'
+ },
+ {
+  keys:['technology','stack','language'],
+  answer:'Known ChronosMatch technologies include Python, FastAPI, a matching engine, a shared-memory/ring-buffer pipeline, a trade ledger, monitoring/metrics, and an HTML/CSS/JavaScript frontend. Check the current requirements.txt and repository before claiming any additional libraries.'
+ },
+ {
+  keys:['database','ledger','trade'],
+  answer:'The trade ledger stores completed trade records. It provides a record of matched transactions, including details needed for monitoring, reporting and later analysis.'
+ },
+ {
+  keys:['price','paise','sequence'],
+  answer:'ChronosMatch uses integer paise/ticks for prices rather than floating-point values. Sequence numbers must be strictly increasing and assigned once by the producer. Do not assign a new sequence number inside the matching engine.'
+ },
+ {
+  keys:['error','buffer','full'],
+  answer:'When a ring buffer is full, the producer must follow the project’s defined backpressure policy. Depending on the implementation, it may wait, retry, or report an error. Do not silently overwrite unread data.'
+ }
+];
+
+function getAssistantAnswer(question){
+ const q=question.toLowerCase();
+
+ for(const item of projectKnowledge){
+  if(item.keys.some(key=>q.includes(key))){
+   return item.answer;
+  }
+ }
+
+ return 'I can help with ChronosMatch architecture, orders, matching engine, mmap/shared memory, metrics, latency, throughput, API, testing, project rules and your Monitoring & Integration role. Try asking about one of these topics.';
+}
+
+function addChatMessage(message,type='bot'){
+ const log=$('chatLog');
+ if(!log)return;
+
+ const el=document.createElement('div');
+ el.className='chat-msg'+(type==='user'?' user':'');
+ el.textContent=message;
+ log.appendChild(el);
+ log.scrollTop=log.scrollHeight;
+}
+
+function askQuick(question){
+ addChatMessage(question,'user');
+ addChatMessage(getAssistantAnswer(question));
+}
+
+$('pageContent').addEventListener('submit',event=>{
+ if(event.target&&event.target.id==='chatForm'){
+  event.preventDefault();
+  const input=$('chatInput');
+  const question=input.value.trim();
+
+  if(!question)return;
+
+  addChatMessage(question,'user');
+  addChatMessage(getAssistantAnswer(question));
+  input.value='';
+ }
+});
+
+/* STOCK ACTIONS */
+function selectStockBySymbol(symbol){
+ const stock=stocks.find(s=>s.symbol===symbol);
+ if(!stock)return;
+
+ selectStock(stock);
+ showView('dashboard');
+}
+
+function quickBuy(symbol){
+ const stock=stocks.find(s=>s.symbol===symbol);
+ if(!stock)return;
+
+ selectStock(stock);
+ setSide('BUY');
+ showView('dashboard');
+ toast('Review the order ticket and quantity before placing your order.');
+}
+
+/* MODAL AND ADD FUNDS — FIXED */
+let modalAction=null;
+
+function openModal(title,body,confirmText='Confirm',callback=null){
+ $('modalTitle').textContent=title;
+ $('modalBody').innerHTML=body;
+ $('modalConfirm').textContent=confirmText;
+ $('modalBackdrop').classList.add('show');
+ modalAction=callback;
+}
+
+function closeModal(){
+ $('modalBackdrop').classList.remove('show');
+ modalAction=null;
+}
+
+$('modalCancel').onclick=closeModal;
+
+$('modalConfirm').onclick=()=>{
+ if(typeof modalAction==='function'){
+  const result=modalAction();
+  if(result===false)return;
+ }
+ closeModal();
+};
+
+function openDeposit(){
+ openModal(
+  'Add demo funds',
+  `
+   <p class="muted">Add simulated cash to your ChronosMatch account.</p>
+   <label class="form-label">AMOUNT (₹)</label>
+   <input class="field" id="depositAmount" type="number" min="1" step="1" placeholder="Enter amount">
+  `,
+  'Add funds',
+  ()=>{
+   const amount=Number($('depositAmount').value);
+
+   if(!Number.isFinite(amount)||amount<=0){
+    toast('Enter a valid amount.');
+    return false;
+   }
+
+   cash+=amount;
+   localStorage.setItem('chronosMatchCash',String(cash));
+   $('cashValue').textContent=money(cash);
+   $('availableCash').textContent=money(cash);
+   toast(money(amount)+' added to demo cash.');
+  }
+ );
+}
+/* EXPORT CSV */
+function downloadStatement(){
+ const rows=[
+  ['Order ID','Symbol','Side','Type','Quantity','Price','Value','Time'],
+  ...orders.map(o=>[
+   o.id,o.symbol,o.side,o.kind,o.qty,o.price,o.value,o.time
+  ])
+ ];
+
+ const csv=rows.map(row=>row.map(value=>
+  '"'+String(value).replace(/"/g,'""')+'"'
+ ).join(',')).join('\n');
+
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+
+ a.href=url;
+ a.download='chronosmatch-statement.csv';
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ URL.revokeObjectURL(url);
+
+ toast('Statement CSV downloaded.');
+}
+
+/* DYNAMIC MARKET SEARCH */
+document.addEventListener('input',event=>{
+ if(event.target&&event.target.id==='marketSearch'){
+  const q=event.target.value.toLowerCase();
+  $('pageContent').querySelectorAll('tbody tr').forEach(row=>{
+   row.style.display=row.textContent.toLowerCase().includes(q)?'':'none';
+  });
+ }
+});
+
+/* EVENT LISTENERS */
+$('mainNav').addEventListener('click',e=>{
+ const button=e.target.closest('[data-view]');
+ if(button)showView(button.dataset.view);
+});
+
+$('watchSearch').addEventListener('input',e=>{
+ renderWatchlist(e.target.value);
+});
+
+$('depositBtn').addEventListener('click',openDeposit);
+
+$('themeBtn').addEventListener('click',()=>{
+ document.body.classList.toggle('light');
+ drawChart();
+});
+
+$('profileBtn').addEventListener('click',()=>{
+ $('profileMenu').classList.toggle('show');
+});
+
+$('profileMenu').addEventListener('click',e=>{
+ const button=e.target.closest('[data-action]');
+ if(!button)return;
+
+ $('profileMenu').classList.remove('show');
+
+ if(button.dataset.action==='profile'){
+  showView('profile');
+ }else if(button.dataset.action==='settings'){
+  openModal('Settings',`
+   <p class="muted">Choose your dashboard appearance.</p>
+   <button class="secondary" onclick="document.body.classList.remove('light');drawChart()">Dark theme</button>
+   <button class="secondary" onclick="document.body.classList.add('light');drawChart()">Light theme</button>
+  `,'Close');
+ }else if(button.dataset.action==='help'){
+  openModal('Help & support',`
+   <p>ChronosMatch is a simulated trading terminal for educational use.</p>
+   <p class="muted">Use the order ticket to place demo orders. Use the Profile page to calculate portfolio risk and profit.</p>
+  `,'Close');
+ }
+});
+
+document.addEventListener('click',e=>{
+ if(!e.target.closest('.profile-menu')){
+  $('profileMenu').classList.remove('show');
+ }
+});
+
+/* THEME */
+const savedTheme=localStorage.getItem('chronosMatchTheme');
+if(savedTheme==='light')document.body.classList.add('light');
+
+$('themeBtn').addEventListener('click',()=>{
+ localStorage.setItem(
+  'chronosMatchTheme',
+  document.body.classList.contains('light')?'light':'dark'
+ );
+});
+
+/* HEADER BUTTONS */
+function updateClock(){
+ $('clock').textContent=new Date().toLocaleTimeString();
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+/* WATCHLIST CONTROLS */
+$('addWatchBtn').addEventListener('click',()=>{
+ openModal(
+  'Add to watchlist',
+  `
+   <label class="form-label">SELECT STOCK</label>
+   <select class="field" id="watchSelect">
+    ${stocks.map(s=>`<option value="${s.symbol}">${s.symbol} — ${s.name}</option>`).join('')}
+   </select>
+  `,
+  'Add stock',
+  ()=>{
+   const symbol=$('watchSelect').value;
+   const stock=stocks.find(s=>s.symbol===symbol);
+
+   if(!stock)return false;
+
+   if(watch.some(s=>s.symbol===symbol)){
+    toast('This stock is already in your watchlist.');
+    return false;
+   }
+
+   watch.push(stock);
+   renderWatchlist($('watchSearch').value);
+   toast(symbol+' added to watchlist.');
+  }
+ );
+});
+
+$('manageWatch').addEventListener('click',()=>{
+ openModal(
+  'Manage watchlist',
+  `
+   <p class="muted">Select a stock to remove from your watchlist.</p>
+   <select class="field" id="removeWatchSelect">
+    ${watch.map(s=>`<option value="${s.symbol}">${s.symbol}</option>`).join('')}
+   </select>
+  `,
+  'Remove stock',
+  ()=>{
+   const symbol=$('removeWatchSelect').value;
+   watch=watch.filter(s=>s.symbol!==symbol);
+   renderWatchlist($('watchSearch').value);
+   toast(symbol+' removed from watchlist.');
+  }
+ );
+});
+
+$('refreshBtn').addEventListener('click',()=>{
+ stocks.forEach(s=>{
+  const movement=(Math.random()-.5)*.5;
+  s.price=Math.max(.01,s.price*(1+movement/100));
+  s.change=Number((s.change+movement).toFixed(2));
+ });
+
+ renderTicker();
+ renderWatchlist($('watchSearch').value);
+ selectStock(selected);
+ toast('Demo market prices refreshed.');
+});
+
+/* CHART CONTROLS */
+$('chartTypeBtn').addEventListener('click',()=>{
+ chartType=chartType==='candles'?'line':'candles';
+ $('chartTypeBtn').textContent=chartType==='candles'?'Candles':'Line';
+ drawChart();
+});
+
+$('timeButtons').addEventListener('click',e=>{
+ const button=e.target.closest('[data-time]');
+ if(!button)return;
+
+ document.querySelectorAll('[data-time]').forEach(b=>{
+  b.classList.toggle('active',b===button);
+ });
+
+ drawChart();
+});
+
+$('indicatorBtn').addEventListener('click',()=>{
+ toast('Chart indicators are not connected in this demo version.');
+});
+
+/* MODAL CLOSE */
+$('modalBackdrop').addEventListener('click',e=>{
+ if(e.target===$('modalBackdrop'))closeModal();
+});
+
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')closeModal();
+});
+
+/* START APPLICATION */
+function startApplication(){
+ renderTicker();
+ renderWatchlist();
+ selectStock(selected);
+ renderPositions();
+
+ $('cashValue').textContent=money(cash);
+ $('availableCash').textContent=money(cash);
+
+ const initialPortfolio=holdings.reduce((sum,h)=>{
+  const stock=stocks.find(s=>s.symbol===h.symbol);
+  return sum+h.qty*(stock?stock.price:h.avg);
+ },0);
+
+ $('portfolioValue').textContent=money(cash+initialPortfolio);
+
+ const metrics=getPortfolioMetrics();
+ $('totalPnl').textContent=(metrics.totalPnl>=0?'+':'')+money(metrics.totalPnl);
+ $('totalPnl').className=metrics.totalPnl>=0?'up':'down';
+
+ drawChart();
+}
+
+startApplication();
+</script>
+</body>
+</html>
